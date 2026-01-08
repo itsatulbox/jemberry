@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+body {
+  color: #3f1f02;
+  background: #ffffff;
+  font-family: var(--font-andada-pro);
+}
+
+h1 {
+  @apply text-3xl; 
+}
+
+h3 {
+  @apply text-xl font-bold;
+}
+
+li {
+  @apply border-b-1 border-transparent hover:border-current pb-1;
+}
