@@ -9,8 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.84.0",
     "@svgr/webpack": "^8.1.0",
-    "next": "16.0.2",
+    "next": "16.1.1",
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },
@@ -19,6 +21,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "baseline-browser-mapping": "^2.9.11",
     "eslint": "^9",
     "eslint-config-next": "16.0.2",
     "tailwindcss": "^4",

@@ -1,7 +1,7 @@
 import Header from "@/components/common/header";
 import Navbar from "@/components/common/navbar";
 
-export default function() {
+export default function faqPage() {
   return (
     <div className="w-full flex flex-col items-center">
       <Navbar />
