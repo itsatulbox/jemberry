@@ -6,6 +6,10 @@ body {
   font-family: var(--font-andada-pro);
 }
 
+@theme {
+  --color-primary: #5b6b4a;
+}
+
 h1 {
   @apply text-3xl; 
 }
@@ -16,4 +20,8 @@ h3 {
 
 li {
   @apply border-b-1 border-transparent hover:border-current pb-1;
+}
+
+.btn {
+  @apply bg-primary text-white p-4 rounded-md hover:bg-[#2f3a23] font-bold;
 }
