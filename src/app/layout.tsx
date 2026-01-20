@@ -19,11 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${andada.variable} antialiased`}
-      >
-        {children}
-      </body>
+      <body className={`${andada.variable} antialiased`}>{children}</body>
     </html>
   );
 }

@@ -11,15 +11,15 @@ body {
 }
 
 h1 {
-  @apply text-3xl; 
+  @apply text-3xl;
 }
 
 h3 {
   @apply text-xl font-bold;
 }
 
-li {
-  @apply border-b-1 border-transparent hover:border-current pb-1;
+.nav-links li {
+  @apply border-b border-transparent hover:border-current pb-1;
 }
 
 .btn {
