@@ -1,8 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import Header from "@/components/common/header";
-import Navbar from "@/components/common/navbar";
 
 export default async function ProductPage({
   params,
@@ -25,12 +23,8 @@ export default async function ProductPage({
 
   return (
     <div className="flex flex-col items-center w-full min-h-screen bg-white">
-      <Navbar />
-      <Header />
-
       <div className="max-w-7xl mx-auto px-6 lg:px-10 w-full py-12">
         <div className="flex flex-col md:flex-row w-full gap-16">
-          {/* IMAGE SECTION */}
           <div className="relative flex-1 aspect-square bg-gray-50 rounded-md overflow-hidden">
             <Image
               src={product.main_image || "/placeholder.jpg"}
@@ -47,13 +41,11 @@ export default async function ProductPage({
               <h1 className="text-3xl font-bold text-gray-900">
                 {product.name}
               </h1>
-              <p className="text-2xl font-medium text-gray-700">
-                NZD {Number(product.price).toFixed(2)}
-              </p>
+              <p>NZD {Number(product.price).toFixed(2)}</p>
             </div>
 
             <div className="flex flex-col">
-              <button className="w-full bg-primary text-white py-4 rounded-full font-bold hover:opacity-80 transition-opacity">
+              <button className="w-full bg-primary text-white py-4 rounded-md font-bold hover:brightness-90 transition-opacity">
                 Add to Cart
               </button>
               <p className="py-2 mt-2.5 mx-auto text-sm text-primary font-medium">
@@ -61,12 +53,9 @@ export default async function ProductPage({
               </p>
             </div>
 
-            <div className="flex flex-col border-t pt-6">
-              <h3 className="font-bold mb-2">Description</h3>
-              <p className="text-gray-600 leading-relaxed">
-                {product.description || "No description available."}
-              </p>
-            </div>
+            <p className="text-gray-600 leading-relaxed">
+              {product.description || "No description available."}
+            </p>
           </div>
         </div>
       </div>
