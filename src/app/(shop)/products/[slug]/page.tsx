@@ -1,8 +1,9 @@
 import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import AddToCartButton from "@/components/shop/addToCartButton";
 
-export default async function ProductPage({
+export default async function Product({
   params,
 }: {
   params: Promise<{ slug: string }>;
@@ -17,46 +18,33 @@ export default async function ProductPage({
     .single();
 
   if (error || !product) {
-    console.error("Error fetching product:", error);
     return notFound();
   }
 
   return (
-    <div className="flex flex-col items-center w-full min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto px-6 lg:px-10 w-full py-12">
-        <div className="flex flex-col md:flex-row w-full gap-16">
-          <div className="relative flex-1 aspect-square bg-gray-50 rounded-md overflow-hidden">
-            <Image
-              src={product.main_image || "/placeholder.jpg"}
-              alt={product.name}
-              className="object-cover"
-              fill
-              priority
-              sizes="(max-width: 768px) 100vw, 50vw"
-            />
+    <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="flex flex-col md:flex-row gap-16">
+        <div className="relative flex-1 aspect-square bg-gray-50 overflow-hidden">
+          <Image
+            src={product.main_image || "/placeholder.jpg"}
+            alt={product.name}
+            className="object-cover"
+            fill
+            priority
+          />
+        </div>
+
+        <div className="flex flex-col w-full md:w-[480px] gap-8">
+          <div>
+            <h1 className="text-3xl font-bold">{product.name}</h1>
+            <p className="mt-2">NZD {Number(product.price).toFixed(2)}</p>
           </div>
 
-          <div className="flex flex-col w-full md:w-[480px] gap-9">
-            <div className="flex flex-col gap-2">
-              <h1 className="text-3xl font-bold text-gray-900">
-                {product.name}
-              </h1>
-              <p>NZD {Number(product.price).toFixed(2)}</p>
-            </div>
+          <AddToCartButton product={product} />
 
-            <div className="flex flex-col">
-              <button className="w-full bg-primary text-white py-4 rounded-md font-bold hover:brightness-90 transition-opacity">
-                Add to Cart
-              </button>
-              <p className="py-2 mt-2.5 mx-auto text-sm text-primary font-medium">
-                Only a few left!
-              </p>
-            </div>
-
-            <p className="text-gray-600 leading-relaxed">
-              {product.description || "No description available."}
-            </p>
-          </div>
+          <p className="leading-relaxed">
+            {product.description || "No description available."}
+          </p>
         </div>
       </div>
     </div>

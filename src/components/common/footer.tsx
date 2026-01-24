@@ -39,7 +39,7 @@ export default function Footer() {
                   href="/about"
                   className="text-gray-600 hover:text-black text-sm transition-colors"
                 >
-                  Shipping Policy
+                  About me!
                 </Link>
               </li>
               <li>
@@ -47,7 +47,7 @@ export default function Footer() {
                   href="/contact"
                   className="text-gray-600 hover:text-black text-sm transition-colors"
                 >
-                  Contact Us
+                  Contact
                 </Link>
               </li>
             </ul>
