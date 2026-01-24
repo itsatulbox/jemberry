@@ -1,6 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
-import ProductForm from "@/components/admin/ProductForm";
+import ProductForm from "@/components/admin/productForm";
 
 export default async function EditProductPage({
   params,

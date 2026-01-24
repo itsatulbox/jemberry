@@ -6,8 +6,10 @@ import CartIcon from "@/assets/cart.svg";
 import MenuIcon from "@/assets/menu.svg";
 import CloseIcon from "@/assets/close.svg";
 import Logo from "@/assets/jemberry_logo.webp";
+import { useCart } from "@/context/cartContext";
 
 export default function Navbar() {
+  const { cart } = useCart();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -40,7 +42,7 @@ export default function Navbar() {
               href="/about"
               className="text-lg hover:text-primary transition-colors"
             >
-              About Us
+              About Me!
             </Link>
           </li>
           <li>
@@ -56,7 +58,7 @@ export default function Navbar() {
               href="/contact"
               className="text-lg hover:text-primary transition-colors"
             >
-              Contact Us
+              Contact
             </Link>
           </li>
         </ul>
@@ -64,7 +66,7 @@ export default function Navbar() {
         <div className="flex-1 flex justify-end items-center gap-6">
           <Link href="/cart" className="flex items-center gap-2">
             <CartIcon className="w-7 h-7" />
-            <span className="text-lg">0</span>
+            <span className="text-lg">{cart.length}</span>
           </Link>
 
           <button
@@ -82,7 +84,7 @@ export default function Navbar() {
       </div>
 
       {isOpen && (
-        <div className="absolute top-full left-0 w-full bg-white border-b border-gray-200 z-[60] md:hidden">
+        <div className="absolute top-full left-0 w-full bg-white border-b border-primary z-[60] md:hidden">
           <ul className="flex flex-col p-8 gap-6">
             <li>
               <Link
@@ -99,7 +101,7 @@ export default function Navbar() {
                 onClick={() => setIsOpen(false)}
                 className="text-xl font-medium"
               >
-                About Us
+                About me!
               </Link>
             </li>
             <li>
@@ -117,7 +119,7 @@ export default function Navbar() {
                 onClick={() => setIsOpen(false)}
                 className="text-xl font-medium"
               >
-                Contact Us
+                Contact
               </Link>
             </li>
           </ul>
