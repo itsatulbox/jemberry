@@ -89,11 +89,13 @@ export default function Cart() {
             <span>Total</span>
             <span>${cartTotal.toFixed(2)} NZD</span>
           </div>
-
           <div className="space-y-3">
-            <button className="w-full py-4 bg-primary text-white rounded-md font-bold hover:brightness-95 transition-all">
+            <Link
+              href="/checkout"
+              className="block w-full py-4 bg-primary text-white rounded-md font-bold text-center hover:brightness-95 transition-all"
+            >
               Proceed to Checkout
-            </button>
+            </Link>
             <p className="text-xs text-center italic opacity-60">
               Shipping and taxes calculated at checkout
             </p>
