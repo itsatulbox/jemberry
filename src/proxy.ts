@@ -29,11 +29,18 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && request.nextUrl.pathname.startsWith("/admin")) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  const isLoginPage = request.nextUrl.pathname === "/admin";
+  const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
+
+  if (!user && isAdminRoute && !isLoginPage) {
+    const url = new URL("/admin", request.url);
+    url.searchParams.set("redirectedFrom", request.nextUrl.pathname);
+    return NextResponse.redirect(url);
+  }
+
+  if (user && isLoginPage) {
+    return NextResponse.redirect(new URL("/admin/products", request.url));
   }
 
   return response;
 }
-
-export const config = { matcher: ["/admin/:path*"] };
