@@ -8,9 +8,15 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(req: Request) {
   try {
-    const { items, method, customerDetails, total } = await req.json();
+    const { items, method, customerDetails } = await req.json();
     const supabase = await createClient();
 
+    // Compute total server-side from item prices
+    const serverTotal = items.reduce(
+      (sum: number, item: any) =>
+        sum + (item.variantPrice ?? item.price) * item.quantity,
+      0
+    );
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert([
@@ -21,7 +27,7 @@ export async function POST(req: Request) {
           address: customerDetails.address || "Pickup",
           city: customerDetails.city || "Auckland",
           delivery_method: method,
-          total_amount: total,
+          total_amount: serverTotal,
           status: "pending",
           items: items,
         },
@@ -37,10 +43,12 @@ export async function POST(req: Request) {
       price_data: {
         currency: "nzd",
         product_data: {
-          name: item.name,
+          name: item.selectedVariant
+            ? `${item.name} — ${item.selectedVariant}`
+            : item.name,
           images: item.main_image ? [item.main_image] : [],
         },
-        unit_amount: Math.round(item.price * 100),
+        unit_amount: Math.round((item.variantPrice ?? item.price) * 100),
       },
       quantity: item.quantity,
     }));
@@ -62,7 +70,7 @@ export async function POST(req: Request) {
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message || "Internal Server Error" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

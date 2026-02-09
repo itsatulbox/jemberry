@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!,
+      process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 400 });
@@ -33,13 +33,21 @@ export async function POST(req: Request) {
     if (orderId) {
       const supabaseAdmin = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
 
-      await supabaseAdmin
+      const { error: statusError } = await supabaseAdmin
         .from("orders")
         .update({ status: "paid" })
         .eq("id", orderId);
+
+      if (statusError) {
+        console.error(`Failed to update order ${orderId} status:`, statusError);
+        return NextResponse.json(
+          { error: "Failed to update order status" },
+          { status: 500 }
+        );
+      }
 
       const { data: order } = await supabaseAdmin
         .from("orders")
@@ -52,12 +60,34 @@ export async function POST(req: Request) {
         for (const item of items) {
           const product_id = item.id || item.product_id;
           const quantity = item.quantity || item.qty;
+          const variantName = item.selectedVariant || null;
 
           if (product_id && quantity) {
-            await supabaseAdmin.rpc("decrement_stock", {
-              product_id,
-              qty: quantity,
-            });
+            if (variantName) {
+              const { error } = await supabaseAdmin.rpc(
+                "decrement_variant_stock",
+                {
+                  p_product_id: product_id,
+                  p_variant_name: variantName,
+                  p_qty: quantity,
+                }
+              );
+              if (error)
+                console.error(
+                  `Failed to decrement variant stock for ${product_id}/${variantName}:`,
+                  error
+                );
+            } else {
+              const { error } = await supabaseAdmin.rpc("decrement_stock", {
+                product_id,
+                qty: quantity,
+              });
+              if (error)
+                console.error(
+                  `Failed to decrement stock for ${product_id}:`,
+                  error
+                );
+            }
           }
         }
       }

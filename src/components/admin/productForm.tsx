@@ -10,12 +10,42 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
 
   const [files, setFiles] = useState<File[]>([]);
   const [imageIndex, setImageIndex] = useState(0);
+  const [variants, setVariants] = useState<
+    { name: string; price: number; stock: number }[]
+  >(
+    initialData?.variants?.map((v: any) => ({
+      name: v.name,
+      price: v.price,
+      stock: v.stock,
+    })) || []
+  );
+  const [newVariantName, setNewVariantName] = useState("");
+  const [newVariantPrice, setNewVariantPrice] = useState("");
+  const [newVariantStock, setNewVariantStock] = useState("");
+
+  const addVariant = () => {
+    const name = newVariantName.trim();
+    const price = parseFloat(newVariantPrice);
+    const stock = parseInt(newVariantStock);
+    if (
+      name &&
+      !isNaN(price) &&
+      !isNaN(stock) &&
+      stock >= 0 &&
+      !variants.some((v) => v.name === name)
+    ) {
+      setVariants([...variants, { name, price, stock }]);
+      setNewVariantName("");
+      setNewVariantPrice("");
+      setNewVariantStock("");
+    }
+  };
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     slug: initialData?.slug || "",
     description: initialData?.description || "",
     price: initialData?.price || "",
-    stock: initialData?.stock || 1,
+    stock: initialData?.stock?.toString() || "1",
     main_image: initialData?.main_image || "",
     images: initialData?.images || [],
   });
@@ -61,27 +91,73 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
       }
     }
 
+    const totalStock =
+      variants.length > 0
+        ? variants.reduce((sum, v) => sum + v.stock, 0)
+        : parseInt(formData.stock);
+
     const payload = {
       name: formData.name,
       slug: formData.slug,
       description: formData.description,
       price: parseFloat(formData.price),
-      stock: parseInt(formData.stock.toString()),
+      stock: totalStock,
       images: uploadedImageUrls,
       main_image: mainImageUrl,
     };
 
-    const { error } = initialData?.id
-      ? await supabase.from("products").update(payload).eq("id", initialData.id)
-      : await supabase.from("products").insert([payload]);
+    let productId = initialData?.id;
 
-    if (!error) {
-      router.push("/admin/products");
-      router.refresh();
+    if (productId) {
+      const { error: updateErr } = await supabase
+        .from("products")
+        .update(payload)
+        .eq("id", productId);
+      if (updateErr) {
+        alert(updateErr.message);
+        setLoading(false);
+        return;
+      }
     } else {
-      alert(error.message);
-      setLoading(false);
+      const { data: newProduct, error: insertErr } = await supabase
+        .from("products")
+        .insert([payload])
+        .select("id")
+        .single();
+      if (insertErr || !newProduct) {
+        alert(insertErr?.message || "Failed to create product");
+        setLoading(false);
+        return;
+      }
+      productId = newProduct.id;
     }
+
+    // Sync variants to product_variants table
+    await supabase
+      .from("product_variants")
+      .delete()
+      .eq("product_id", productId);
+
+    if (variants.length > 0) {
+      const { error: variantErr } = await supabase
+        .from("product_variants")
+        .insert(
+          variants.map((v) => ({
+            product_id: productId,
+            name: v.name,
+            price: v.price,
+            stock: v.stock,
+          }))
+        );
+      if (variantErr) {
+        alert("Product saved but variants failed: " + variantErr.message);
+        setLoading(false);
+        return;
+      }
+    }
+
+    router.push("/admin/products");
+    router.refresh();
   };
 
   return (
@@ -103,7 +179,7 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-bold mb-1">price ($)</label>
+            <label className="block text-sm font-bold mb-1">price (NZD)</label>
             <input
               type="number"
               step="0.01"
@@ -119,15 +195,22 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
             <label className="block text-sm font-bold mb-1">
               stock quantity
             </label>
-            <input
-              type="number"
-              className="w-full border border-primary/20 p-2 rounded-md outline-none"
-              value={formData.stock}
-              onChange={(e) =>
-                setFormData({ ...formData, stock: e.target.value })
-              }
-              required
-            />
+            {variants.length > 0 ? (
+              <div className="w-full border border-primary/20 p-2 rounded-md bg-primary/5 text-sm">
+                {variants.reduce((sum, v) => sum + v.stock, 0)}
+                <span className="text-xs opacity-50 ml-1">(from variants)</span>
+              </div>
+            ) : (
+              <input
+                type="number"
+                className="w-full border border-primary/20 p-2 rounded-md outline-none"
+                value={formData.stock}
+                onChange={(e) =>
+                  setFormData({ ...formData, stock: e.target.value })
+                }
+                required
+              />
+            )}
           </div>
         </div>
 
@@ -140,6 +223,68 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
               setFormData({ ...formData, description: e.target.value })
             }
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-bold mb-1">variants</label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="e.g. Small, Red"
+              className="flex-1 border border-primary/20 p-2 rounded-md outline-none text-sm"
+              value={newVariantName}
+              onChange={(e) => setNewVariantName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addVariant();
+                }
+              }}
+            />
+            <input
+              type="number"
+              step="0.01"
+              placeholder="Price"
+              className="w-24 border border-primary/20 p-2 rounded-md outline-none text-sm"
+              value={newVariantPrice}
+              onChange={(e) => setNewVariantPrice(e.target.value)}
+            />
+            <input
+              type="number"
+              placeholder="Stock"
+              className="w-20 border border-primary/20 p-2 rounded-md outline-none text-sm"
+              value={newVariantStock}
+              onChange={(e) => setNewVariantStock(e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={addVariant}
+              className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-md hover:brightness-95"
+            >
+              add
+            </button>
+          </div>
+          {variants.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {variants.map((v, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-bold px-3 py-1.5 rounded-full"
+                >
+                  {v.name} — ${v.price.toFixed(2)} (qty: {v.stock})
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setVariants(variants.filter((_, idx) => idx !== i))
+                    }
+                    className="text-primary/60 hover:text-red-500 ml-1"
+                  >
+                    ✕
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="p-4 border-2 border-dashed border-primary/20 rounded-lg bg-primary/5">

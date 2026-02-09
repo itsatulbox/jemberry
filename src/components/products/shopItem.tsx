@@ -3,7 +3,10 @@ import Image from "next/image";
 import type { Product } from "@/types/Product";
 
 export default function ShopItem({ item }: { item: Product }) {
-  const isSoldOut = item.stock <= 0;
+  const hasVariants = item.variants && item.variants.length > 0;
+  const isSoldOut = hasVariants
+    ? item.variants.every((v) => v.stock <= 0)
+    : item.stock <= 0;
 
   return (
     <Link href={`/products/${item.slug}`}>
@@ -28,7 +31,18 @@ export default function ShopItem({ item }: { item: Product }) {
         </div>
 
         <h4 className="font-bold mt-4">{item.name}</h4>
-        <p className="mt-2">NZD {item.price.toFixed(2)}</p>
+        <p className="mt-2">
+          {item.variants && item.variants.length > 0
+            ? (() => {
+                const prices = item.variants.map((v) => v.price);
+                const min = Math.min(...prices);
+                const max = Math.max(...prices);
+                return min === max
+                  ? `NZD ${min.toFixed(2)}`
+                  : `NZD ${min.toFixed(2)} — ${max.toFixed(2)}`;
+              })()
+            : `NZD ${item.price.toFixed(2)}`}
+        </p>
       </div>
     </Link>
   );

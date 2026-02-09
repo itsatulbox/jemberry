@@ -29,7 +29,7 @@ export default function Cart() {
       <div className="space-y-10">
         {cart.map((item) => (
           <div
-            key={item.id}
+            key={`${item.id}-${item.selectedVariant || ""}`}
             className="flex gap-6 border-b border-primary/20 pb-8"
           >
             <div className="relative w-24 h-24 bg-gray-50 overflow-hidden rounded-md flex-shrink-0 border border-primary/10">
@@ -47,17 +47,29 @@ export default function Cart() {
                   <h3 className="font-bold text-lg text-primary">
                     {item.name}
                   </h3>
-                  <p className="text-xs italic mt-1">${item.price} NZD each</p>
+                  {item.selectedVariant && (
+                    <p className="text-xs font-medium text-primary/60 mt-0.5">
+                      Variant: {item.selectedVariant}
+                    </p>
+                  )}
+                  <p className="text-xs italic mt-1">
+                    ${(item.variantPrice ?? item.price).toFixed(2)} NZD each
+                  </p>
                 </div>
                 <p className="font-bold text-primary">
-                  ${(item.price * item.quantity).toFixed(2)}
+                  $
+                  {((item.variantPrice ?? item.price) * item.quantity).toFixed(
+                    2
+                  )}
                 </p>
               </div>
 
               <div className="flex justify-between items-end mt-4">
                 <div className="flex items-center border border-primary rounded-full px-3 py-1 gap-4">
                   <button
-                    onClick={() => updateQuantity(item.id, -1)}
+                    onClick={() =>
+                      updateQuantity(item.id, item.selectedVariant, -1)
+                    }
                     className="text-lg leading-none text-primary hover:opacity-50"
                   >
                     -
@@ -66,7 +78,9 @@ export default function Cart() {
                     {item.quantity}
                   </span>
                   <button
-                    onClick={() => updateQuantity(item.id, 1)}
+                    onClick={() =>
+                      updateQuantity(item.id, item.selectedVariant, 1)
+                    }
                     className="text-lg leading-none text-primary hover:opacity-50"
                   >
                     +
@@ -74,7 +88,7 @@ export default function Cart() {
                 </div>
 
                 <button
-                  onClick={() => removeFromCart(item.id)}
+                  onClick={() => removeFromCart(item.id, item.selectedVariant)}
                   className="text-xs underline font-medium text-primary/70 hover:text-primary"
                 >
                   Remove
