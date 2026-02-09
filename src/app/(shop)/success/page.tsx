@@ -9,7 +9,8 @@ export default function SuccessPage() {
 
   useEffect(() => {
     clearCart();
-  }, [clearCart]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="max-w-7xl mx-auto px-6 lg:px-10">

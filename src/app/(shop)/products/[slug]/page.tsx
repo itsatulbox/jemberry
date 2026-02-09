@@ -1,7 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
-import AddToCartButton from "@/components/shop/addToCartButton";
 import ImageCarousel from "@/components/products/imageCarousel";
+import VariantSelector from "@/components/products/variantSelector";
 
 export default async function Product({
   params,
@@ -13,7 +13,7 @@ export default async function Product({
 
   const { data: product, error } = await supabase
     .from("products")
-    .select("*")
+    .select("*, variants:product_variants(*)")
     .eq("slug", slug)
     .single();
 
@@ -33,10 +33,9 @@ export default async function Product({
         <div className="flex flex-col w-full md:w-[480px] gap-8">
           <div>
             <h1 className="text-3xl font-bold">{product.name}</h1>
-            <p className="mt-2">NZD {Number(product.price).toFixed(2)}</p>
           </div>
 
-          <AddToCartButton product={product} />
+          <VariantSelector product={product} />
 
           <p className="leading-relaxed">
             {product.description || "No description available."}

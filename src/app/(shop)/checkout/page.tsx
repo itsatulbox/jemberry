@@ -63,14 +63,22 @@ export default function CheckoutPage() {
               <button
                 type="button"
                 onClick={() => setMethod("shipping")}
-                className={`p-4 border rounded-md font-bold transition-all ${method === "shipping" ? "border-primary bg-primary/5" : "border-primary/20 opacity-50"}`}
+                className={`p-4 border rounded-md font-bold transition-all ${
+                  method === "shipping"
+                    ? "border-primary bg-primary/5"
+                    : "border-primary/20 opacity-50"
+                }`}
               >
                 Shipping
               </button>
               <button
                 type="button"
                 onClick={() => setMethod("pickup")}
-                className={`p-4 border rounded-md font-bold transition-all ${method === "pickup" ? "border-primary bg-primary/5" : "border-primary/20 opacity-50"}`}
+                className={`p-4 border rounded-md font-bold transition-all ${
+                  method === "pickup"
+                    ? "border-primary bg-primary/5"
+                    : "border-primary/20 opacity-50"
+                }`}
               >
                 Pickup (Auckland)
               </button>
@@ -84,6 +92,7 @@ export default function CheckoutPage() {
                 name="email"
                 type="email"
                 placeholder="Email Address"
+                value={formData.email}
                 onChange={handleInputChange}
                 className="p-3 border border-primary/20 rounded-md col-span-2 outline-none focus:border-primary"
                 required
@@ -91,6 +100,7 @@ export default function CheckoutPage() {
               <input
                 name="firstName"
                 placeholder="First Name"
+                value={formData.firstName}
                 onChange={handleInputChange}
                 className="p-3 border border-primary/20 rounded-md outline-none focus:border-primary"
                 required
@@ -98,6 +108,7 @@ export default function CheckoutPage() {
               <input
                 name="lastName"
                 placeholder="Last Name"
+                value={formData.lastName}
                 onChange={handleInputChange}
                 className="p-3 border border-primary/20 rounded-md outline-none focus:border-primary"
                 required
@@ -106,6 +117,7 @@ export default function CheckoutPage() {
                 name="phone"
                 type="tel"
                 placeholder="Phone Number"
+                value={formData.phone}
                 onChange={handleInputChange}
                 className="p-3 border border-primary/20 rounded-md col-span-2 outline-none focus:border-primary"
                 required
@@ -116,6 +128,7 @@ export default function CheckoutPage() {
                   <input
                     name="address"
                     placeholder="Shipping Address"
+                    value={formData.address}
                     onChange={handleInputChange}
                     className="p-3 border border-primary/20 rounded-md col-span-2 outline-none focus:border-primary"
                     required
@@ -123,6 +136,7 @@ export default function CheckoutPage() {
                   <input
                     name="city"
                     placeholder="City"
+                    value={formData.city}
                     onChange={handleInputChange}
                     className="p-3 border border-primary/20 rounded-md outline-none focus:border-primary"
                     required
@@ -130,6 +144,7 @@ export default function CheckoutPage() {
                   <input
                     name="postalCode"
                     placeholder="Postal Code"
+                    value={formData.postalCode}
                     onChange={handleInputChange}
                     className="p-3 border border-primary/20 rounded-md outline-none focus:border-primary"
                     required
@@ -152,7 +167,10 @@ export default function CheckoutPage() {
             <h2 className="text-xl font-bold mb-6">Order Summary</h2>
             <div className="space-y-4 mb-6">
               {cart.map((item) => (
-                <div key={item.id} className="flex gap-4 items-center text-sm">
+                <div
+                  key={`${item.id}-${item.selectedVariant || ""}`}
+                  className="flex gap-4 items-center text-sm"
+                >
                   <div className="relative w-12 h-12 rounded overflow-hidden border border-primary/10 bg-white">
                     <Image
                       src={item.main_image || "/placeholder.jpg"}
@@ -161,10 +179,22 @@ export default function CheckoutPage() {
                       className="object-cover"
                     />
                   </div>
-                  <span className="flex-1 font-bold">
-                    {item.name} (x{item.quantity})
+                  <div className="flex-1">
+                    <span className="font-bold">
+                      {item.name} (x{item.quantity})
+                    </span>
+                    {item.selectedVariant && (
+                      <p className="text-xs opacity-60">
+                        {item.selectedVariant}
+                      </p>
+                    )}
+                  </div>
+                  <span>
+                    $
+                    {(
+                      (item.variantPrice ?? item.price) * item.quantity
+                    ).toFixed(2)}
                   </span>
-                  <span>${(item.price * item.quantity).toFixed(2)}</span>
                 </div>
               ))}
             </div>

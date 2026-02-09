@@ -53,14 +53,6 @@ export default function Navbar() {
               FAQ
             </Link>
           </li>
-          <li>
-            <Link
-              href="/contact"
-              className="text-lg hover:text-primary transition-colors"
-            >
-              Contact
-            </Link>
-          </li>
         </ul>
 
         <div className="flex-1 flex justify-end items-center gap-6">
@@ -111,15 +103,6 @@ export default function Navbar() {
                 className="text-xl font-medium"
               >
                 FAQ
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/contact"
-                onClick={() => setIsOpen(false)}
-                className="text-xl font-medium"
-              >
-                Contact
               </Link>
             </li>
           </ul>

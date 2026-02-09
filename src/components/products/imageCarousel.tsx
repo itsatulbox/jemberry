@@ -23,7 +23,7 @@ export default function ImageCarousel({
       const img = new window.Image();
       img.src = src;
     });
-  }, []);
+  }, [allImages.length]);
 
   const prev = () =>
     setCurrent((i) => (i === 0 ? allImages.length - 1 : i - 1));

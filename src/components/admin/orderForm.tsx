@@ -65,9 +65,16 @@ export default function OrderForm({ initialData }: { initialData: any }) {
                   <h3 className="font-bold text-[14px] leading-tight mb-1 uppercase tracking-tight">
                     {item.name}
                   </h3>
-                  <span className="text-[10px] font-black text-primary px-2 py-0.5 rounded bg-primary/10">
-                    QTY: {item.quantity}
-                  </span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-black text-primary px-2 py-0.5 rounded bg-primary/10">
+                      QTY: {item.quantity}
+                    </span>
+                    {item.selectedVariant && (
+                      <span className="text-[10px] font-black text-primary/70 px-2 py-0.5 rounded bg-primary/5 border border-primary/10">
+                        {item.selectedVariant}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="text-right font-mono text-[11px] opacity-40">
                   ${(item.price * item.quantity).toFixed(2)}
