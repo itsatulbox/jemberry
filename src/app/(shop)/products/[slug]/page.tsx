@@ -1,7 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import AddToCartButton from "@/components/shop/addToCartButton";
+import ImageCarousel from "@/components/products/imageCarousel";
 
 export default async function Product({
   params,
@@ -24,15 +24,11 @@ export default async function Product({
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
       <div className="flex flex-col md:flex-row gap-16">
-        <div className="relative flex-1 aspect-square bg-gray-50 overflow-hidden">
-          <Image
-            src={product.main_image || "/placeholder.jpg"}
-            alt={product.name}
-            className="object-cover"
-            fill
-            priority
-          />
-        </div>
+        <ImageCarousel
+          mainImage={product.main_image}
+          images={product.images || []}
+          alt={product.name}
+        />
 
         <div className="flex flex-col w-full md:w-[480px] gap-8">
           <div>

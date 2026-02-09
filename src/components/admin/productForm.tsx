@@ -9,6 +9,7 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
   const [loading, setLoading] = useState(false);
 
   const [files, setFiles] = useState<File[]>([]);
+  const [imageIndex, setImageIndex] = useState(0);
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     slug: initialData?.slug || "",
@@ -147,10 +148,179 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
             type="file"
             multiple
             accept="image/*"
-            onChange={(e) => setFiles(Array.from(e.target.files || []))}
+            onChange={(e) =>
+              setFiles((prev) => [...prev, ...Array.from(e.target.files || [])])
+            }
             className="text-xs text-primary file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-primary file:text-white cursor-pointer"
           />
+
+          {files.length > 0 && (
+            <div className="mt-3 space-y-1">
+              <p className="text-xs font-bold opacity-60">
+                new files to upload
+              </p>
+              {files.map((file, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between text-xs bg-white rounded px-3 py-1.5 border border-primary/10"
+                >
+                  <span className="truncate mr-2">{file.name}</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFiles((prev) => prev.filter((_, idx) => idx !== i))
+                    }
+                    className="text-red-500 hover:text-red-700 shrink-0"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+
+        {formData.images.length > 0 && (
+          <div className="p-4 border border-primary/20 rounded-lg">
+            <p className="text-sm font-bold mb-2">existing images</p>
+
+            {(() => {
+              const idx = Math.min(imageIndex, formData.images.length - 1);
+              const url = formData.images[idx];
+              const isMain = url === formData.main_image;
+              return (
+                <div className="flex flex-col gap-3">
+                  {/* Main preview */}
+                  <div className="relative group w-48 h-48 mx-auto rounded-lg overflow-hidden border-2 border-primary/20 bg-gray-50">
+                    <img
+                      src={url}
+                      alt={`Product image ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    {isMain && (
+                      <span className="absolute top-1.5 left-1.5 text-[10px] font-bold bg-primary text-white px-1.5 py-0.5 rounded">
+                        main
+                      </span>
+                    )}
+
+                    {formData.images.length > 1 && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setImageIndex(
+                              idx === 0 ? formData.images.length - 1 : idx - 1
+                            )
+                          }
+                          className="absolute left-1.5 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-1 shadow opacity-0 group-hover:opacity-100 transition"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="15 18 9 12 15 6" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setImageIndex(
+                              idx === formData.images.length - 1 ? 0 : idx + 1
+                            )
+                          }
+                          className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-1 shadow opacity-0 group-hover:opacity-100 transition"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="9 6 15 12 9 18" />
+                          </svg>
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex items-center justify-center gap-2">
+                    {!isMain && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData({ ...formData, main_image: url })
+                        }
+                        className="text-[11px] bg-primary/10 text-primary font-bold px-3 py-1 rounded hover:bg-primary/20 transition"
+                      >
+                        set as main
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = formData.images.filter(
+                          (_: string, j: number) => j !== idx
+                        );
+                        setFormData({
+                          ...formData,
+                          images: updated,
+                          main_image: isMain
+                            ? updated[0] || ""
+                            : formData.main_image,
+                        });
+                        setImageIndex(Math.max(0, idx - 1));
+                      }}
+                      className="text-[11px] bg-red-50 text-red-500 font-bold px-3 py-1 rounded hover:bg-red-100 transition"
+                    >
+                      remove
+                    </button>
+                  </div>
+
+                  {/* Thumbnail strip */}
+                  {formData.images.length > 1 && (
+                    <div className="flex justify-center gap-1.5 flex-wrap">
+                      {formData.images.map((thumb: string, ti: number) => (
+                        <button
+                          key={ti}
+                          type="button"
+                          onClick={() => setImageIndex(ti)}
+                          className={`w-10 h-10 rounded overflow-hidden border-2 transition ${
+                            ti === idx
+                              ? "border-primary"
+                              : "border-transparent opacity-60 hover:opacity-100"
+                          }`}
+                        >
+                          <img
+                            src={thumb}
+                            alt={`Thumb ${ti + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="text-center text-[11px] opacity-50">
+                    {idx + 1} / {formData.images.length}
+                  </p>
+                </div>
+              );
+            })()}
+          </div>
+        )}
       </div>
 
       <button
@@ -161,8 +331,8 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
         {loading
           ? "processing..."
           : initialData
-            ? "update product"
-            : "create product"}
+          ? "update product"
+          : "create product"}
       </button>
     </form>
   );
