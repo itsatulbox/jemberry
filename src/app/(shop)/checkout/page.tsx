@@ -1,7 +1,13 @@
 "use client";
 import { useCart } from "@/context/cartContext";
-import { useState } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
+import {
+  getShippingRate,
+  getShippingLabel,
+  COUNTRIES,
+  POPULAR_COUNTRY_NAMES,
+} from "@/utils/shippingRates";
 
 export default function CheckoutPage() {
   const { cart, cartTotal } = useCart();
@@ -16,9 +22,46 @@ export default function CheckoutPage() {
     address: "",
     city: "",
     postalCode: "",
+    country: "",
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const shippingCost = useMemo(
+    () => getShippingRate(formData.country, method),
+    [formData.country, method],
+  );
+  const shippingLabel = useMemo(
+    () => getShippingLabel(formData.country, method),
+    [formData.country, method],
+  );
+  const orderTotal = cartTotal + shippingCost;
+
+  const [countrySearch, setCountrySearch] = useState("");
+  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+  const countryRef = useRef<HTMLDivElement>(null);
+
+  const filteredCountries = useMemo(() => {
+    if (!countrySearch) return COUNTRIES;
+    const q = countrySearch.toLowerCase();
+    return COUNTRIES.filter((c) => c.name.toLowerCase().includes(q));
+  }, [countrySearch]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (
+        countryRef.current &&
+        !countryRef.current.contains(e.target as Node)
+      ) {
+        setCountryDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -34,7 +77,9 @@ export default function CheckoutPage() {
           items: cart,
           method: method,
           customerDetails: formData,
-          total: cartTotal,
+          total: orderTotal,
+          shippingCost: shippingCost,
+          country: formData.country,
         }),
       });
 
@@ -125,6 +170,71 @@ export default function CheckoutPage() {
 
               {method === "shipping" && (
                 <>
+                  <div className="col-span-2 relative" ref={countryRef}>
+                    <input
+                      type="text"
+                      value={
+                        countryDropdownOpen ? countrySearch : formData.country
+                      }
+                      onChange={(e) => {
+                        setCountrySearch(e.target.value);
+                        setFormData({ ...formData, country: "" });
+                        setCountryDropdownOpen(true);
+                      }}
+                      onFocus={() => {
+                        setCountryDropdownOpen(true);
+                        setCountrySearch("");
+                      }}
+                      placeholder="Search country..."
+                      className="w-full p-3 border border-primary/20 rounded-md outline-none focus:border-primary bg-white"
+                      autoComplete="off"
+                      required={!formData.country}
+                    />
+                    {/* Hidden input to hold the actual selected value */}
+                    <input
+                      type="hidden"
+                      name="country"
+                      value={formData.country}
+                    />
+                    {countryDropdownOpen && (
+                      <ul className="absolute z-50 left-0 right-0 mt-1 max-h-52 overflow-y-auto border border-primary/20 rounded-md bg-white shadow-lg">
+                        {filteredCountries.length === 0 ? (
+                          <li
+                            onClick={() => {
+                              setFormData({
+                                ...formData,
+                                country: "Other Country",
+                              });
+                              setCountrySearch("");
+                              setCountryDropdownOpen(false);
+                            }}
+                            className="p-3 text-sm cursor-pointer hover:bg-primary/5 transition-colors"
+                          >
+                            Other Country
+                          </li>
+                        ) : (
+                          filteredCountries.map((c) => (
+                            <li
+                              key={c.name}
+                              onClick={() => {
+                                setFormData({ ...formData, country: c.name });
+                                setCountrySearch("");
+                                setCountryDropdownOpen(false);
+                              }}
+                              className={`p-3 text-sm cursor-pointer hover:bg-primary/5 transition-colors ${
+                                POPULAR_COUNTRY_NAMES.includes(c.name) &&
+                                !countrySearch
+                                  ? "font-bold"
+                                  : ""
+                              }`}
+                            >
+                              {c.name}
+                            </li>
+                          ))
+                        )}
+                      </ul>
+                    )}
+                  </div>
                   <input
                     name="address"
                     placeholder="Shipping Address"
@@ -155,10 +265,10 @@ export default function CheckoutPage() {
           </section>
 
           <button
-            disabled={loading}
+            disabled={loading || (method === "shipping" && !formData.country)}
             className="w-full py-4 bg-primary text-white rounded-md font-bold text-lg hover:brightness-95 disabled:bg-gray-300"
           >
-            {loading ? "Processing..." : `Pay $${cartTotal.toFixed(2)} NZD`}
+            {loading ? "Processing..." : `Pay $${orderTotal.toFixed(2)} NZD`}
           </button>
         </form>
 
@@ -198,9 +308,36 @@ export default function CheckoutPage() {
                 </div>
               ))}
             </div>
-            <div className="border-t border-primary/20 pt-4 flex justify-between text-xl font-bold">
-              <span>Total</span>
-              <span>${cartTotal.toFixed(2)} NZD</span>
+            <div className="border-t border-primary/20 pt-4 space-y-3">
+              <div className="flex justify-between text-sm">
+                <span>Subtotal</span>
+                <span>${cartTotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Shipping</span>
+                <span
+                  className={
+                    shippingCost === 0 &&
+                    method === "shipping" &&
+                    !formData.country
+                      ? "opacity-50 italic"
+                      : ""
+                  }
+                >
+                  {method === "pickup"
+                    ? "Free"
+                    : !formData.country
+                      ? "Select country"
+                      : `$${shippingCost.toFixed(2)}`}
+                </span>
+              </div>
+              <div className="flex justify-between text-xl font-bold pt-2 border-t border-primary/10">
+                <span>Total</span>
+                <span>${orderTotal.toFixed(2)} NZD</span>
+              </div>
+              {method === "shipping" && formData.country && (
+                <p className="text-xs opacity-50 italic">{shippingLabel}</p>
+              )}
             </div>
           </div>
         </div>

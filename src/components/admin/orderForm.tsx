@@ -87,9 +87,17 @@ export default function OrderForm({ initialData }: { initialData: any }) {
             <span className="font-bold text-[10px] uppercase tracking-widest opacity-80">
               Total Paid
             </span>
-            <span className="text-3xl font-black italic tracking-tighter">
-              ${Number(initialData.total_amount).toFixed(2)}
-            </span>
+            <div className="text-right">
+              <span className="text-3xl font-black italic tracking-tighter">
+                ${Number(initialData.total_amount).toFixed(2)}
+              </span>
+              {initialData.shipping_cost > 0 && (
+                <p className="text-[10px] opacity-70 mt-1">
+                  Includes ${Number(initialData.shipping_cost).toFixed(2)}{" "}
+                  shipping
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -158,6 +166,11 @@ export default function OrderForm({ initialData }: { initialData: any }) {
                 <p className="text-sm font-black mt-1 uppercase text-primary">
                   {initialData.city}
                 </p>
+                {initialData.country && (
+                  <p className="text-xs font-bold mt-1 text-primary/70">
+                    {initialData.country}
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-8 pt-8 border-t border-primary/10">
@@ -177,6 +190,16 @@ export default function OrderForm({ initialData }: { initialData: any }) {
                     {initialData.customer_phone || "—"}
                   </p>
                 </div>
+                {initialData.shipping_cost > 0 && (
+                  <div>
+                    <p className="text-[9px] font-black uppercase opacity-30 mb-2 tracking-widest">
+                      Shipping Cost
+                    </p>
+                    <p className="text-[11px] font-black text-primary">
+                      ${Number(initialData.shipping_cost).toFixed(2)} NZD
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
