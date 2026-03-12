@@ -43,6 +43,22 @@ export default async function AdminLayout({
               Orders
             </Link>
           </li>
+          <li>
+            <Link
+              href="/admin/pages"
+              className="text-sm font-bold opacity-60 hover:opacity-100 transition-all uppercase tracking-widest"
+            >
+              Pages
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/admin/shipping"
+              className="text-sm font-bold opacity-60 hover:opacity-100 transition-all uppercase tracking-widest"
+            >
+              Shipping
+            </Link>
+          </li>
         </ul>
       </nav>
 
