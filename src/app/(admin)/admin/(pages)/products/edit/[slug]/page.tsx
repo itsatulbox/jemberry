@@ -12,7 +12,7 @@ export default async function EditProductPage({
 
   const { data: product } = await supabase
     .from("products")
-    .select("*, variants:product_variants(*)")
+    .select("*, variants:product_variants(*), addons:product_addons(*)")
     .eq("slug", slug)
     .single();
 

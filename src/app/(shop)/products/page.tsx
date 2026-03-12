@@ -11,7 +11,7 @@ export default async function Products({
   const supabase = await createClient();
   const { search, sort } = await searchParams;
 
-  let query = supabase.from("products").select("*, variants:product_variants(*)");
+  let query = supabase.from("products").select("*, variants:product_variants(*), addons:product_addons(*)");
 
   if (search) {
     query = query.ilike("name", `%${search}%`);

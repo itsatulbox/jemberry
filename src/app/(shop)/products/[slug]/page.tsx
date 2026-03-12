@@ -13,7 +13,7 @@ export default async function Product({
 
   const { data: product, error } = await supabase
     .from("products")
-    .select("*, variants:product_variants(*)")
+    .select("*, variants:product_variants(*), addons:product_addons(*)")
     .eq("slug", slug)
     .single();
 
@@ -37,9 +37,14 @@ export default async function Product({
 
           <VariantSelector product={product} />
 
-          <p className="leading-relaxed">
-            {product.description || "No description available."}
-          </p>
+          {product.description ? (
+            <div
+              className="leading-relaxed description-content"
+              dangerouslySetInnerHTML={{ __html: product.description }}
+            />
+          ) : (
+            <p className="leading-relaxed">No description available.</p>
+          )}
         </div>
       </div>
     </div>

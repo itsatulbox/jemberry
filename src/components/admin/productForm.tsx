@@ -2,11 +2,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import RichTextEditor from "@/components/admin/richTextEditor";
 
 export default function ProductForm({ initialData }: { initialData?: any }) {
   const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [files, setFiles] = useState<File[]>([]);
   const [imageIndex, setImageIndex] = useState(0);
@@ -22,6 +24,21 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
   const [newVariantName, setNewVariantName] = useState("");
   const [newVariantPrice, setNewVariantPrice] = useState("");
   const [newVariantStock, setNewVariantStock] = useState("");
+
+  const [addons, setAddons] = useState<
+    { group_label: string; name: string; price_modifier: number }[]
+  >(
+    initialData?.addons?.map((a: any) => ({
+      group_label: a.group_label,
+      name: a.name,
+      price_modifier: Number(a.price_modifier),
+    })) || []
+  );
+  const [addonGroupLabel, setAddonGroupLabel] = useState(
+    initialData?.addons?.[0]?.group_label || "Add-on"
+  );
+  const [newAddonName, setNewAddonName] = useState("");
+  const [newAddonPrice, setNewAddonPrice] = useState("");
 
   const addVariant = () => {
     const name = newVariantName.trim();
@@ -70,6 +87,7 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     let uploadedImageUrls: string[] = [...formData.images];
     let mainImageUrl = formData.main_image;
@@ -114,7 +132,7 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
         .update(payload)
         .eq("id", productId);
       if (updateErr) {
-        alert(updateErr.message);
+        setError(updateErr.message);
         setLoading(false);
         return;
       }
@@ -125,7 +143,7 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
         .select("id")
         .single();
       if (insertErr || !newProduct) {
-        alert(insertErr?.message || "Failed to create product");
+        setError(insertErr?.message || "Failed to create product");
         setLoading(false);
         return;
       }
@@ -150,7 +168,31 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
           }))
         );
       if (variantErr) {
-        alert("Product saved but variants failed: " + variantErr.message);
+        setError("Product saved but variants failed: " + variantErr.message);
+        setLoading(false);
+        return;
+      }
+    }
+
+    // Sync addons to product_addons table
+    await supabase
+      .from("product_addons")
+      .delete()
+      .eq("product_id", productId);
+
+    if (addons.length > 0) {
+      const { error: addonErr } = await supabase
+        .from("product_addons")
+        .insert(
+          addons.map((a) => ({
+            product_id: productId,
+            group_label: a.group_label,
+            name: a.name,
+            price_modifier: a.price_modifier,
+          }))
+        );
+      if (addonErr) {
+        setError("Product saved but add-ons failed: " + addonErr.message);
         setLoading(false);
         return;
       }
@@ -216,11 +258,10 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
 
         <div>
           <label className="block text-sm font-bold mb-1">description</label>
-          <textarea
-            className="w-full border border-primary/20 p-2 rounded-md h-32 outline-none"
-            value={formData.description}
-            onChange={(e) =>
-              setFormData({ ...formData, description: e.target.value })
+          <RichTextEditor
+            content={formData.description}
+            onChange={(html) =>
+              setFormData({ ...formData, description: html })
             }
           />
         </div>
@@ -276,6 +317,96 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
                     type="button"
                     onClick={() =>
                       setVariants(variants.filter((_, idx) => idx !== i))
+                    }
+                    className="text-primary/60 hover:text-red-500 ml-1"
+                  >
+                    ✕
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-bold mb-1">add-ons</label>
+          <p className="text-xs opacity-50 mb-2">
+            Optional second choice (e.g. &quot;With Keychain&quot;). Price modifier is added to the base/variant price.
+          </p>
+          <div className="flex gap-2 mb-2">
+            <input
+              type="text"
+              placeholder="Group label (e.g. Extras)"
+              className="w-40 border border-primary/20 p-2 rounded-md outline-none text-sm"
+              value={addonGroupLabel}
+              onChange={(e) => setAddonGroupLabel(e.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="Option name (e.g. Keychain)"
+              className="flex-1 border border-primary/20 p-2 rounded-md outline-none text-sm"
+              value={newAddonName}
+              onChange={(e) => setNewAddonName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  const name = newAddonName.trim();
+                  const mod = parseFloat(newAddonPrice) || 0;
+                  if (name && !addons.some((a) => a.name === name)) {
+                    setAddons([
+                      ...addons,
+                      { group_label: addonGroupLabel, name, price_modifier: mod },
+                    ]);
+                    setNewAddonName("");
+                    setNewAddonPrice("");
+                  }
+                }
+              }}
+            />
+            <input
+              type="number"
+              step="0.01"
+              placeholder="+$ Price"
+              className="w-24 border border-primary/20 p-2 rounded-md outline-none text-sm"
+              value={newAddonPrice}
+              onChange={(e) => setNewAddonPrice(e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const name = newAddonName.trim();
+                const mod = parseFloat(newAddonPrice) || 0;
+                if (name && !addons.some((a) => a.name === name)) {
+                  setAddons([
+                    ...addons,
+                    { group_label: addonGroupLabel, name, price_modifier: mod },
+                  ]);
+                  setNewAddonName("");
+                  setNewAddonPrice("");
+                }
+              }}
+              className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-md hover:brightness-95"
+            >
+              add
+            </button>
+          </div>
+          {addons.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {addons.map((a, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-bold px-3 py-1.5 rounded-full"
+                >
+                  {a.name}
+                  {a.price_modifier !== 0 && (
+                    <span className="opacity-60">
+                      {a.price_modifier > 0 ? "+" : ""}${a.price_modifier.toFixed(2)}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setAddons(addons.filter((_, idx) => idx !== i))
                     }
                     className="text-primary/60 hover:text-red-500 ml-1"
                   >
@@ -467,6 +598,12 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
           </div>
         )}
       </div>
+
+      {error && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm font-medium">
+          {error}
+        </div>
+      )}
 
       <button
         type="submit"
