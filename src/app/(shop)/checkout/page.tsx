@@ -1,18 +1,33 @@
 "use client";
 import { useCart } from "@/context/cartContext";
+import { useToast } from "@/context/toastContext";
 import { useState, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
 import {
-  getShippingRate,
-  getShippingLabel,
-  COUNTRIES,
-  POPULAR_COUNTRY_NAMES,
+  getShippingRateFromData,
+  getShippingLabelFromData,
+  type ShippingZone,
+  type ShippingCountry,
 } from "@/utils/shippingRates";
 
 export default function CheckoutPage() {
   const { cart, cartTotal } = useCart();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [method, setMethod] = useState<"shipping" | "pickup">("shipping");
+
+  const [zones, setZones] = useState<ShippingZone[]>([]);
+  const [countries, setCountries] = useState<ShippingCountry[]>([]);
+
+  useEffect(() => {
+    fetch("/api/shipping")
+      .then((res) => res.json())
+      .then((data) => {
+        setZones(data.zones || []);
+        setCountries(data.countries || []);
+      })
+      .catch(() => {});
+  }, []);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -26,12 +41,12 @@ export default function CheckoutPage() {
   });
 
   const shippingCost = useMemo(
-    () => getShippingRate(formData.country, method),
-    [formData.country, method],
+    () => getShippingRateFromData(formData.country, method, zones, countries),
+    [formData.country, method, zones, countries],
   );
   const shippingLabel = useMemo(
-    () => getShippingLabel(formData.country, method),
-    [formData.country, method],
+    () => getShippingLabelFromData(formData.country, method, zones, countries),
+    [formData.country, method, zones, countries],
   );
   const orderTotal = cartTotal + shippingCost;
 
@@ -39,11 +54,16 @@ export default function CheckoutPage() {
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
   const countryRef = useRef<HTMLDivElement>(null);
 
+  const popularCountryNames = useMemo(
+    () => countries.filter((c) => c.is_popular).map((c) => c.name),
+    [countries],
+  );
+
   const filteredCountries = useMemo(() => {
-    if (!countrySearch) return COUNTRIES;
+    if (!countrySearch) return countries;
     const q = countrySearch.toLowerCase();
-    return COUNTRIES.filter((c) => c.name.toLowerCase().includes(q));
-  }, [countrySearch]);
+    return countries.filter((c) => c.name.toLowerCase().includes(q));
+  }, [countrySearch, countries]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -87,7 +107,7 @@ export default function CheckoutPage() {
       if (error) throw new Error(error);
       if (url) window.location.href = url;
     } catch (err: any) {
-      alert(err.message || "Something went wrong.");
+      showToast(err.message || "Something went wrong.", "error");
     } finally {
       setLoading(false);
     }
@@ -222,7 +242,7 @@ export default function CheckoutPage() {
                                 setCountryDropdownOpen(false);
                               }}
                               className={`p-3 text-sm cursor-pointer hover:bg-primary/5 transition-colors ${
-                                POPULAR_COUNTRY_NAMES.includes(c.name) &&
+                                popularCountryNames.includes(c.name) &&
                                 !countrySearch
                                   ? "font-bold"
                                   : ""
@@ -278,7 +298,7 @@ export default function CheckoutPage() {
             <div className="space-y-4 mb-6">
               {cart.map((item) => (
                 <div
-                  key={`${item.id}-${item.selectedVariant || ""}`}
+                  key={`${item.id}-${item.selectedVariant || ""}-${item.selectedAddon || ""}`}
                   className="flex gap-4 items-center text-sm"
                 >
                   <div className="relative w-12 h-12 rounded overflow-hidden border border-primary/10 bg-white">
@@ -298,11 +318,16 @@ export default function CheckoutPage() {
                         {item.selectedVariant}
                       </p>
                     )}
+                    {item.selectedAddon && (
+                      <p className="text-xs opacity-60">
+                        + {item.selectedAddon}
+                      </p>
+                    )}
                   </div>
                   <span>
                     $
                     {(
-                      (item.variantPrice ?? item.price) * item.quantity
+                      ((item.variantPrice ?? item.price) + (item.addonPrice ?? 0)) * item.quantity
                     ).toFixed(2)}
                   </span>
                 </div>

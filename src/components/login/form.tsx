@@ -8,6 +8,7 @@ export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -16,14 +17,15 @@ export default function LoginForm() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) {
-      alert(`Sign-in failed: ${error.message}`);
+    if (signInError) {
+      setError(signInError.message);
       setLoading(false);
     } else {
       const redirectTo =
@@ -43,6 +45,11 @@ export default function LoginForm() {
         </div>
 
         <form onSubmit={handleSignIn} className="space-y-6">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-medium">
+              {error}
+            </div>
+          )}
           <div>
             <label
               htmlFor="email"

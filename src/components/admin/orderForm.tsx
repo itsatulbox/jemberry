@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 export default function OrderForm({ initialData }: { initialData: any }) {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     status: initialData.status,
     address: initialData.address,
@@ -18,15 +19,16 @@ export default function OrderForm({ initialData }: { initialData: any }) {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase
+    setError(null);
+    const { error: updateError } = await supabase
       .from("orders")
       .update(formData)
       .eq("id", initialData.id);
-    if (!error) {
+    if (!updateError) {
       setIsEditing(false);
       router.refresh();
     } else {
-      alert(error.message);
+      setError(updateError.message);
     }
     setLoading(false);
   };
@@ -134,6 +136,11 @@ export default function OrderForm({ initialData }: { initialData: any }) {
                   }
                 />
               </div>
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm font-medium">
+                  {error}
+                </div>
+              )}
               <button
                 type="submit"
                 disabled={loading}
