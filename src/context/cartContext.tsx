@@ -13,19 +13,26 @@ interface CartContextType {
   addToCart: (
     product: Product,
     variant?: string | null,
-    variantPrice?: number | null
+    variantPrice?: number | null,
+    addon?: string | null,
+    addonPrice?: number | null
   ) => void;
-  removeFromCart: (id: string, variant?: string | null) => void;
+  removeFromCart: (id: string, variant?: string | null, addon?: string | null) => void;
   updateQuantity: (
     id: string,
     variant: string | null | undefined,
-    delta: number
+    delta: number,
+    addon?: string | null
   ) => void;
   clearCart: () => void;
   cartTotal: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
+
+function cartKey(item: { id: string; selectedVariant?: string | null; selectedAddon?: string | null }) {
+  return `${item.id}|${item.selectedVariant || ""}|${item.selectedAddon || ""}`;
+}
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -52,14 +59,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addToCart = (
     product: Product,
     variant?: string | null,
-    variantPrice?: number | null
+    variantPrice?: number | null,
+    addon?: string | null,
+    addonPrice?: number | null
   ) => {
     setCart((currentCart) => {
-      const existingItem = currentCart.find(
-        (item) =>
-          item.id === product.id &&
-          (item.selectedVariant || null) === (variant || null)
-      );
+      const key = `${product.id}|${variant || ""}|${addon || ""}`;
+      const existingItem = currentCart.find((item) => cartKey(item) === key);
       // Use the selected variant's stock, or fall back to product.stock
       const maxStock = variant
         ? product.variants?.find((v) => v.name === variant)?.stock ??
@@ -68,8 +74,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (existingItem) {
         if (existingItem.quantity >= maxStock) return currentCart;
         return currentCart.map((item) =>
-          item.id === product.id &&
-          (item.selectedVariant || null) === (variant || null)
+          cartKey(item) === key
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
@@ -81,6 +86,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           quantity: 1,
           selectedVariant: variant || null,
           variantPrice: variantPrice ?? null,
+          selectedAddon: addon || null,
+          addonPrice: addonPrice ?? null,
         },
       ];
     });
@@ -89,14 +96,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const updateQuantity = (
     id: string,
     variant: string | null | undefined,
-    delta: number
+    delta: number,
+    addon?: string | null
   ) => {
     setCart((currentCart) =>
       currentCart.map((item) => {
-        if (
-          item.id === id &&
-          (item.selectedVariant || null) === (variant || null)
-        ) {
+        const key = `${id}|${variant || ""}|${addon || ""}`;
+        if (cartKey(item) === key) {
           const maxStock = item.selectedVariant
             ? item.variants?.find((v) => v.name === item.selectedVariant)
                 ?.stock ?? item.stock
@@ -109,15 +115,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const removeFromCart = (id: string, variant?: string | null) => {
+  const removeFromCart = (id: string, variant?: string | null, addon?: string | null) => {
     setCart((current) =>
-      current.filter(
-        (item) =>
-          !(
-            item.id === id &&
-            (item.selectedVariant || null) === (variant || null)
-          )
-      )
+      current.filter((item) => {
+        const key = `${id}|${variant || ""}|${addon || ""}`;
+        return cartKey(item) !== key;
+      })
     );
   };
 
@@ -127,7 +130,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const cartTotal = cart.reduce(
-    (total, item) => total + (item.variantPrice ?? item.price) * item.quantity,
+    (total, item) =>
+      total +
+      ((item.variantPrice ?? item.price) + (item.addonPrice ?? 0)) *
+        item.quantity,
     0
   );
 

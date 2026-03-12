@@ -5,7 +5,7 @@ export default async function ManageProductsPage() {
   const supabase = await createClient();
   const { data: products, error } = await supabase
     .from("products")
-    .select("*, variants:product_variants(*)")
+    .select("*, variants:product_variants(*), addons:product_addons(*)")
     .order("created_at", { ascending: false });
 
   if (error) {

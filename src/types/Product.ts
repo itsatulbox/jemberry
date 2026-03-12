@@ -6,6 +6,14 @@ export interface ProductVariant {
   stock: number;
 }
 
+export interface ProductAddon {
+  id: string;
+  product_id: string;
+  group_label: string;
+  name: string;
+  price_modifier: number;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -16,10 +24,11 @@ export interface Product {
   images: string[];
   stock: number;
   variants: ProductVariant[];
+  addons: ProductAddon[];
   created_at: string;
 }
 
-export type ProductInsert = Omit<Product, "id" | "created_at" | "variants">;
+export type ProductInsert = Omit<Product, "id" | "created_at" | "variants" | "addons">;
 
 export type ProductUpdate = Partial<ProductInsert>;
 
@@ -27,4 +36,6 @@ export type CartItem = Product & {
   quantity: number;
   selectedVariant?: string | null;
   variantPrice?: number | null;
+  selectedAddon?: string | null;
+  addonPrice?: number | null;
 };
