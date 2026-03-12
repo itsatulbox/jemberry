@@ -1,16 +1,39 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import CartIcon from "@/assets/cart.svg";
 import MenuIcon from "@/assets/menu.svg";
 import CloseIcon from "@/assets/close.svg";
 import Logo from "@/assets/jemberry_logo.webp";
 import { useCart } from "@/context/cartContext";
 
-export default function Navbar() {
+interface NavLink {
+  href: string;
+  label: string;
+}
+
+export default function Navbar({ navLinks }: { navLinks: NavLink[] }) {
   const { cart } = useCart();
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+  const [badgePop, setBadgePop] = useState(false);
+  const prevCartLength = useRef(cart.length);
+
+  useEffect(() => {
+    if (cart.length > prevCartLength.current) {
+      setBadgePop(true);
+      const timer = setTimeout(() => setBadgePop(false), 300);
+      return () => clearTimeout(timer);
+    }
+    prevCartLength.current = cart.length;
+  }, [cart.length]);
+
+  const isActive = (href: string) => {
+    if (href === "/products") return pathname === "/products" || pathname.startsWith("/products/");
+    return pathname === href;
+  };
 
   return (
     <nav className="w-full relative">
@@ -29,36 +52,31 @@ export default function Navbar() {
         </div>
 
         <ul className="hidden md:flex flex-row gap-10 items-center whitespace-nowrap nav-links">
-          <li>
-            <Link
-              href="/products"
-              className="text-lg hover:text-primary transition-colors"
-            >
-              Products
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/about"
-              className="text-lg hover:text-primary transition-colors"
-            >
-              About Me!
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/faq"
-              className="text-lg hover:text-primary transition-colors"
-            >
-              FAQ
-            </Link>
-          </li>
+          {navLinks.map((link) => (
+            <li key={link.href}>
+              <Link
+                href={link.href}
+                className={`text-lg transition-colors ${
+                  isActive(link.href)
+                    ? "text-primary border-b-2 border-current pb-1 font-bold"
+                    : "hover:text-primary"
+                }`}
+              >
+                {link.label}
+              </Link>
+            </li>
+          ))}
         </ul>
 
         <div className="flex-1 flex justify-end items-center gap-6">
           <Link href="/cart" className="flex items-center gap-2">
             <CartIcon className="w-7 h-7" />
-            <span className="text-lg">{cart.length}</span>
+            <span
+              className={`text-lg ${badgePop ? "animate-badge-pop" : ""}`}
+              key={cart.length}
+            >
+              {cart.length}
+            </span>
           </Link>
 
           <button
@@ -78,33 +96,19 @@ export default function Navbar() {
       {isOpen && (
         <div className="absolute top-full left-0 w-full bg-white border-b border-primary z-[60] md:hidden">
           <ul className="flex flex-col p-8 gap-6">
-            <li>
-              <Link
-                href="/products"
-                onClick={() => setIsOpen(false)}
-                className="text-xl font-medium"
-              >
-                Products
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/about"
-                onClick={() => setIsOpen(false)}
-                className="text-xl font-medium"
-              >
-                About me!
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/faq"
-                onClick={() => setIsOpen(false)}
-                className="text-xl font-medium"
-              >
-                FAQ
-              </Link>
-            </li>
+            {navLinks.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  onClick={() => setIsOpen(false)}
+                  className={`text-xl font-medium ${
+                    isActive(link.href) ? "text-primary font-bold" : ""
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
       )}
