@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import RichTextEditor from "@/components/admin/richTextEditor";
+import { compressImage } from "@/utils/compressImage";
+import { cdnUrl } from "@/utils/cdnUrl";
 
 export default function ProductForm({ initialData }: { initialData?: any }) {
   const router = useRouter();
@@ -94,10 +96,13 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
 
     if (files.length > 0) {
       for (const file of files) {
-        const fileName = `${Date.now()}-${file.name}`;
+        const compressed = await compressImage(file);
+        const fileName = `${Date.now()}-${compressed.name}`;
         const { data: uploadData } = await supabase.storage
           .from("products")
-          .upload(fileName, file);
+          .upload(fileName, compressed, {
+            cacheControl: "31536000",
+          });
 
         if (uploadData) {
           const {
@@ -469,7 +474,7 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
                   {/* Main preview */}
                   <div className="relative group w-48 h-48 mx-auto rounded-lg overflow-hidden border-2 border-primary/20 bg-gray-50">
                     <img
-                      src={url}
+                      src={cdnUrl(url)}
                       alt={`Product image ${idx + 1}`}
                       className="w-full h-full object-cover"
                     />
@@ -580,7 +585,7 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
                           }`}
                         >
                           <img
-                            src={thumb}
+                            src={cdnUrl(thumb)}
                             alt={`Thumb ${ti + 1}`}
                             className="w-full h-full object-cover"
                           />

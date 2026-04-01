@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Product } from "@/types/Product";
+import { cdnUrl } from "@/utils/cdnUrl";
 
 export default function ShopItem({ item }: { item: Product }) {
   const hasVariants = item.variants && item.variants.length > 0;
@@ -13,7 +14,7 @@ export default function ShopItem({ item }: { item: Product }) {
       <div className="flex flex-col items-center">
         <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-50">
           <Image
-            src={item.main_image || "/placeholder.jpg"}
+            src={cdnUrl(item.main_image || "/placeholder.jpg")}
             alt={item.name}
             fill
             className="object-cover"

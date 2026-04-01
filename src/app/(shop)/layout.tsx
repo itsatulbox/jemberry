@@ -4,6 +4,8 @@ import { CartProvider } from "@/context/cartContext";
 import { ToastProvider } from "@/context/toastContext";
 import { createClient } from "@/utils/supabase/server";
 
+export const revalidate = 3600;
+
 async function getNavLinks() {
   const supabase = await createClient();
   const { data } = await supabase

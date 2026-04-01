@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import { cdnUrl } from "@/utils/cdnUrl";
 
 export default function ProductListWrapper({
   initialProducts,
@@ -55,7 +56,7 @@ export default function ProductListWrapper({
           >
             <div className="aspect-square relative bg-gray-50">
               <img
-                src={product.main_image || "/placeholder.jpg"}
+                src={cdnUrl(product.main_image || "/placeholder.jpg")}
                 alt={product.name}
                 className="object-cover w-full h-full"
               />

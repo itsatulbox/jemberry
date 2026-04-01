@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { cdnUrl } from "@/utils/cdnUrl";
 
 export default function ImageCarousel({
   mainImage,
@@ -12,8 +13,10 @@ export default function ImageCarousel({
   images: string[];
   alt: string;
 }) {
-  const main = mainImage || "/placeholder.jpg";
-  const rest = (images || []).filter((img) => img && img !== mainImage);
+  const main = cdnUrl(mainImage || "/placeholder.jpg");
+  const rest = (images || [])
+    .filter((img) => img && img !== mainImage)
+    .map(cdnUrl);
   const allImages = [main, ...rest];
 
   const [current, setCurrent] = useState(0);

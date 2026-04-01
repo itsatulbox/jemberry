@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import { cdnUrl } from "@/utils/cdnUrl";
 
 export default function OrderForm({ initialData }: { initialData: any }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -58,7 +59,7 @@ export default function OrderForm({ initialData }: { initialData: any }) {
                   className="bg-primary/5 rounded-lg overflow-hidden border border-primary/5"
                 >
                   <img
-                    src={item.main_image || "/placeholder.jpg"}
+                    src={cdnUrl(item.main_image || "/placeholder.jpg")}
                     alt={item.name}
                     className="w-full h-full object-cover"
                   />

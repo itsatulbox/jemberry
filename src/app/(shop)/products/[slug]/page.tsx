@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import ImageCarousel from "@/components/products/imageCarousel";
 import VariantSelector from "@/components/products/variantSelector";
 
+export const revalidate = 3600;
+
 export default async function Product({
   params,
 }: {
