@@ -3,6 +3,8 @@ import { createClient } from "@/utils/supabase/server";
 import FilterBar from "@/components/products/filterBar";
 import { Suspense } from "react";
 
+export const revalidate = 3600;
+
 export default async function Products({
   searchParams,
 }: {

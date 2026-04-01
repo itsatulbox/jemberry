@@ -2,6 +2,8 @@ import ShopItem from "@/components/products/shopItem";
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 
+export const revalidate = 3600;
+
 export default async function Home() {
   const supabase = await createClient();
 
