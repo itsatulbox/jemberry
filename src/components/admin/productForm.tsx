@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import RichTextEditor from "@/components/admin/richTextEditor";
+import { compressImage } from "@/utils/compressImage";
 
 export default function ProductForm({ initialData }: { initialData?: any }) {
   const router = useRouter();
@@ -94,10 +95,13 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
 
     if (files.length > 0) {
       for (const file of files) {
+        const compressed = await compressImage(file);
         const fileName = `${Date.now()}-${file.name}`;
         const { data: uploadData } = await supabase.storage
           .from("products")
-          .upload(fileName, file);
+          .upload(fileName, compressed, {
+            cacheControl: "31536000",
+          });
 
         if (uploadData) {
           const {
