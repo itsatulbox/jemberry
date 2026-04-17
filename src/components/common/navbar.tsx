@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import CartIcon from "@/assets/cart.svg";
 import MenuIcon from "@/assets/menu.svg";
 import CloseIcon from "@/assets/close.svg";
-import Logo from "@/assets/jemberry_logo.webp";
+import Logo from "@/assets/logo.webp";
 import { useCart } from "@/context/cartContext";
 
 interface NavLink {

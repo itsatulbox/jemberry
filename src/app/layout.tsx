@@ -8,8 +8,25 @@ const andada = Andada_Pro({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ||
+      (process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : "http://localhost:3000")
+  ),
   title: "Jemberry Studio",
   description: "Clay Trinkets and More!",
+  openGraph: {
+    title: "Jemberry Studio",
+    description: "Clay Trinkets and More!",
+    siteName: "Jemberry Studio",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Jemberry Studio",
+    description: "Clay Trinkets and More!",
+  },
 };
 
 export default function RootLayout({
