@@ -1,14 +1,16 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { cdnUrl } from "@/utils/cdnUrl";
+import { Product } from "@/types/Product";
 
 export default function ProductListWrapper({
   initialProducts,
 }: {
-  initialProducts: any[];
+  initialProducts: Product[];
 }) {
   const [products, setProducts] = useState(initialProducts);
   const [searchTerm, setSearchTerm] = useState("");
@@ -55,10 +57,11 @@ export default function ProductListWrapper({
             className="border border-primary/10 rounded-md overflow-hidden bg-white hover:border-primary/30 transition-all"
           >
             <div className="aspect-square relative bg-gray-50">
-              <img
+              <Image
                 src={cdnUrl(product.main_image || "/placeholder.jpg")}
                 alt={product.name}
-                className="object-cover w-full h-full"
+                fill
+                className="object-cover"
               />
             </div>
             <div className="p-4">

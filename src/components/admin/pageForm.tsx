@@ -3,10 +3,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import RichTextEditor from "@/components/admin/richTextEditor";
+import { Page } from "@/types/Page";
 
 const RESERVED_SLUGS = ["products", "cart", "checkout", "success", "admin"];
 
-export default function PageForm({ initialData }: { initialData?: any }) {
+export default function PageForm({ initialData }: { initialData?: Page }) {
   const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(false);

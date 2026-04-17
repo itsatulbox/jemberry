@@ -18,13 +18,21 @@ export default function Navbar({ navLinks }: { navLinks: NavLink[] }) {
   const { cart } = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
-  const [badgePop, setBadgePop] = useState(false);
+  const badgeRef = useRef<HTMLSpanElement>(null);
   const prevCartLength = useRef(cart.length);
 
   useEffect(() => {
-    if (cart.length > prevCartLength.current) {
-      setBadgePop(true);
-      const timer = setTimeout(() => setBadgePop(false), 300);
+    const el = badgeRef.current;
+    if (cart.length > prevCartLength.current && el) {
+      el.classList.remove("animate-badge-pop");
+      // Force reflow so the animation restarts on rapid increments.
+      void el.offsetWidth;
+      el.classList.add("animate-badge-pop");
+      const timer = setTimeout(
+        () => el.classList.remove("animate-badge-pop"),
+        300,
+      );
+      prevCartLength.current = cart.length;
       return () => clearTimeout(timer);
     }
     prevCartLength.current = cart.length;
@@ -71,10 +79,7 @@ export default function Navbar({ navLinks }: { navLinks: NavLink[] }) {
         <div className="flex-1 flex justify-end items-center gap-6">
           <Link href="/cart" className="flex items-center gap-2">
             <CartIcon className="w-7 h-7" />
-            <span
-              className={`text-lg ${badgePop ? "animate-badge-pop" : ""}`}
-              key={cart.length}
-            >
+            <span ref={badgeRef} className="text-lg">
               {cart.length}
             </span>
           </Link>
