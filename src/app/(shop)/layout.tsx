@@ -6,7 +6,7 @@ import { createClient } from "@/utils/supabase/server";
 
 export const revalidate = 3600;
 
-async function getNavLinks() {
+async function getPages() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("pages")
@@ -14,10 +14,7 @@ async function getNavLinks() {
     .eq("is_visible", true)
     .order("display_order", { ascending: true });
 
-  return [
-    { href: "/products", label: "Products" },
-    ...(data || []).map((p) => ({ href: `/${p.slug}`, label: p.nav_label })),
-  ];
+  return data || [];
 }
 
 export default async function ShopLayout({
@@ -25,7 +22,11 @@ export default async function ShopLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const navLinks = await getNavLinks();
+  const pages = await getPages();
+  const navLinks = [
+    { href: "/products", label: "Products" },
+    ...pages.map((p) => ({ href: `/${p.slug}`, label: p.nav_label })),
+  ];
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -33,7 +34,7 @@ export default async function ShopLayout({
         <ToastProvider>
           <Navbar navLinks={navLinks} />
           <main className="grow">{children}</main>
-          <Footer />
+          <Footer pages={pages} />
         </ToastProvider>
       </CartProvider>
     </div>

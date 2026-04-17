@@ -1,10 +1,18 @@
 import Link from "next/link";
 
-export default function Footer() {
+type FooterPage = { slug: string; nav_label: string };
+
+export default function Footer({ pages }: { pages: FooterPage[] }) {
   return (
     <footer className="w-full bg-white border-t border-gray-100">
       <div className="max-w-7xl mx-auto px-6 py-8 md:px-10 md:py-10">
-        <div className="grid grid-cols-2 gap-8 mb-8 md:grid-cols-3 md:mb-10">
+        <div
+          className={`grid gap-8 mb-8 md:mb-10 ${
+            pages.length > 0
+              ? "grid-cols-2 md:grid-cols-3"
+              : "grid-cols-1 md:grid-cols-2"
+          }`}
+        >
           <div>
             <h3 className="font-bold mb-4 uppercase tracking-widest">Shop</h3>
             <ul className="space-y-2">
@@ -17,16 +25,20 @@ export default function Footer() {
             </ul>
           </div>
 
-          <div>
-            <h3 className="font-bold mb-4 uppercase tracking-widest">
-              Support
-            </h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/about">About me!</Link>
-              </li>
-            </ul>
-          </div>
+          {pages.length > 0 && (
+            <div>
+              <h3 className="font-bold mb-4 uppercase tracking-widest">
+                Support
+              </h3>
+              <ul className="space-y-2">
+                {pages.map((page) => (
+                  <li key={page.slug}>
+                    <Link href={`/${page.slug}`}>{page.nav_label}</Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div>
             <h3 className="font-bold mb-4 uppercase tracking-widest">
