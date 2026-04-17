@@ -8,11 +8,11 @@ export default function VariantSelector({ product }: { product: Product }) {
   const [selectedVariantName, setSelectedVariantName] = useState<string | null>(
     null
   );
-  const [selectedAddonName, setSelectedAddonName] = useState<string | null>(
-    null
-  );
   const hasVariants = product.variants && product.variants.length > 0;
   const hasAddons = product.addons && product.addons.length > 0;
+  const [selectedAddonName, setSelectedAddonName] = useState<string | null>(
+    hasAddons ? product.addons[0].name : null
+  );
   const selectedVariant =
     product.variants?.find((v) => v.name === selectedVariantName) || null;
   const selectedAddon =
@@ -81,7 +81,6 @@ export default function VariantSelector({ product }: { product: Product }) {
             onChange={(e) => setSelectedAddonName(e.target.value || null)}
             className="w-full border border-gray-300 rounded-md p-3 text-sm outline-none focus:border-black transition"
           >
-            <option value="">None</option>
             {product.addons.map((a) => (
               <option key={a.name} value={a.name}>
                 {a.name}
