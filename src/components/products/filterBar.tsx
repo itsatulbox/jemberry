@@ -8,7 +8,7 @@ import CloseIcon from "@/assets/close.svg";
 export default function FilterBar() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   const [inputValue, setInputValue] = useState(
     searchParams.get("search") || "",

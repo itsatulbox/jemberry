@@ -26,7 +26,7 @@ export default function FAQ() {
             </ul>
           </section>
           <section>
-            <h3 className="text-xl font-semibold mb-4">˚࿔ what i don't make</h3>
+            <h3 className="text-xl font-semibold mb-4">˚࿔ what i don&apos;t make</h3>
             <ul className="space-y-1">
               <li>- NSFW / explicit content</li>
               <li>- Realistic portraits</li>
@@ -41,7 +41,7 @@ export default function FAQ() {
             <p><strong>Local (NZ):</strong> Bank transfer or Cash. $8 Tracked shipping (3-5 days) or pickup in Newmarket.</p>
             <p><strong>International:</strong> PayPal or Wise. $18 - $35 Tracked shipping (3-10 days).</p>
             <p className="text-sm italic pt-2 border-t border-current">
-              Note: Shipping costs are the buyer's responsibility. I am not responsible for courier delays.
+              Note: Shipping costs are the buyer&apos;s responsibility. I am not responsible for courier delays.
             </p>
           </div>
         </section>

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { cdnUrl } from "@/utils/cdnUrl";
 
 export default function ImageCarousel({
@@ -20,13 +20,6 @@ export default function ImageCarousel({
   const allImages = [main, ...rest];
 
   const [current, setCurrent] = useState(0);
-
-  useEffect(() => {
-    allImages.forEach((src) => {
-      const img = new window.Image();
-      img.src = src;
-    });
-  }, [allImages.length]);
 
   const prev = () =>
     setCurrent((i) => (i === 0 ? allImages.length - 1 : i - 1));

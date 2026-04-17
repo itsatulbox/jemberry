@@ -26,8 +26,7 @@ export default function SuccessPage() {
         }
       })
       .catch(() => setStatus("error"));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId]);
+  }, [sessionId, clearCart]);
 
   if (status === "loading") {
     return (

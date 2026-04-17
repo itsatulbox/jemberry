@@ -37,10 +37,6 @@ export default function VariantSelector({ product }: { product: Product }) {
     return `NZD ${min.toFixed(2)} — ${max.toFixed(2)}`;
   };
 
-  const effectivePrice = selectedVariant
-    ? selectedVariant.price + addonModifier
-    : Number(product.price) + addonModifier;
-
   return (
     <div className="flex flex-col gap-4">
       <p className="text-lg">{displayPrice()}</p>

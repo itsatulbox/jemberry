@@ -1,10 +1,12 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 import { cdnUrl } from "@/utils/cdnUrl";
+import { Order, OrderStatus } from "@/types/Order";
 
-export default function OrderForm({ initialData }: { initialData: any }) {
+export default function OrderForm({ initialData }: { initialData: Order }) {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,15 +54,17 @@ export default function OrderForm({ initialData }: { initialData: any }) {
             Packing List
           </h2>
           <div className="border border-primary/10 rounded-2xl divide-y divide-primary/5 bg-white overflow-hidden">
-            {initialData.items?.map((item: any, idx: number) => (
+            {initialData.items?.map((item, idx) => (
               <div key={idx} className="flex items-center gap-6 p-6">
                 <div
                   style={{ width: "60px", height: "60px", minWidth: "60px" }}
                   className="bg-primary/5 rounded-lg overflow-hidden border border-primary/5"
                 >
-                  <img
+                  <Image
                     src={cdnUrl(item.main_image || "/placeholder.jpg")}
                     alt={item.name}
+                    width={60}
+                    height={60}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -115,7 +119,10 @@ export default function OrderForm({ initialData }: { initialData: any }) {
                   className="w-full text-sm p-4 border border-primary/20 rounded-xl bg-white outline-none focus:border-primary transition-all font-bold"
                   value={formData.status}
                   onChange={(e) =>
-                    setFormData({ ...formData, status: e.target.value })
+                    setFormData({
+                      ...formData,
+                      status: e.target.value as OrderStatus,
+                    })
                   }
                 >
                   <option value="pending">pending</option>

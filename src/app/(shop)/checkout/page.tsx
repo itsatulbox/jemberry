@@ -22,13 +22,22 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     fetch("/api/shipping")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`Shipping API returned ${res.status}`);
+        return res.json();
+      })
       .then((data) => {
         setZones(data.zones || []);
         setCountries(data.countries || []);
       })
-      .catch(() => {});
-  }, []);
+      .catch((err) => {
+        console.error("Failed to load shipping options:", err);
+        showToast(
+          "Couldn't load shipping options — please refresh.",
+          "error",
+        );
+      });
+  }, [showToast]);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -96,10 +105,8 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: cart,
-          method: method,
+          method,
           customerDetails: formData,
-          total: orderTotal,
-          shippingCost: shippingCost,
           country: formData.country,
         }),
       });
@@ -107,8 +114,10 @@ export default function CheckoutPage() {
       const { url, error } = await response.json();
       if (error) throw new Error(error);
       if (url) window.location.href = url;
-    } catch (err: any) {
-      showToast(err.message || "Something went wrong.", "error");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Something went wrong.";
+      showToast(message, "error");
     } finally {
       setLoading(false);
     }

@@ -1,12 +1,21 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 import RichTextEditor from "@/components/admin/richTextEditor";
 import { compressImage } from "@/utils/compressImage";
 import { cdnUrl } from "@/utils/cdnUrl";
+import { Product } from "@/types/Product";
 
-export default function ProductForm({ initialData }: { initialData?: any }) {
+type VariantDraft = { name: string; price: number; stock: number };
+type AddonDraft = { group_label: string; name: string; price_modifier: number };
+
+export default function ProductForm({
+  initialData,
+}: {
+  initialData?: Product;
+}) {
   const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
@@ -14,10 +23,8 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
 
   const [files, setFiles] = useState<File[]>([]);
   const [imageIndex, setImageIndex] = useState(0);
-  const [variants, setVariants] = useState<
-    { name: string; price: number; stock: number }[]
-  >(
-    initialData?.variants?.map((v: any) => ({
+  const [variants, setVariants] = useState<VariantDraft[]>(
+    initialData?.variants?.map((v) => ({
       name: v.name,
       price: v.price,
       stock: v.stock,
@@ -27,10 +34,8 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
   const [newVariantPrice, setNewVariantPrice] = useState("");
   const [newVariantStock, setNewVariantStock] = useState("");
 
-  const [addons, setAddons] = useState<
-    { group_label: string; name: string; price_modifier: number }[]
-  >(
-    initialData?.addons?.map((a: any) => ({
+  const [addons, setAddons] = useState<AddonDraft[]>(
+    initialData?.addons?.map((a) => ({
       group_label: a.group_label,
       name: a.name,
       price_modifier: Number(a.price_modifier),
@@ -63,7 +68,7 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
     name: initialData?.name || "",
     slug: initialData?.slug || "",
     description: initialData?.description || "",
-    price: initialData?.price || "",
+    price: initialData?.price?.toString() || "",
     stock: initialData?.stock?.toString() || "1",
     main_image: initialData?.main_image || "",
     images: initialData?.images || [],
@@ -91,7 +96,7 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
     setLoading(true);
     setError(null);
 
-    let uploadedImageUrls: string[] = [...formData.images];
+    const uploadedImageUrls: string[] = [...formData.images];
     let mainImageUrl = formData.main_image;
 
     if (files.length > 0) {
@@ -473,9 +478,11 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
                 <div className="flex flex-col gap-3">
                   {/* Main preview */}
                   <div className="relative group w-48 h-48 mx-auto rounded-lg overflow-hidden border-2 border-primary/20 bg-gray-50">
-                    <img
+                    <Image
                       src={cdnUrl(url)}
                       alt={`Product image ${idx + 1}`}
+                      width={192}
+                      height={192}
                       className="w-full h-full object-cover"
                     />
                     {isMain && (
@@ -553,7 +560,7 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
                       type="button"
                       onClick={() => {
                         const updated = formData.images.filter(
-                          (_: string, j: number) => j !== idx
+                          (_, j) => j !== idx
                         );
                         setFormData({
                           ...formData,
@@ -573,7 +580,7 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
                   {/* Thumbnail strip */}
                   {formData.images.length > 1 && (
                     <div className="flex justify-center gap-1.5 flex-wrap">
-                      {formData.images.map((thumb: string, ti: number) => (
+                      {formData.images.map((thumb, ti) => (
                         <button
                           key={ti}
                           type="button"
@@ -584,9 +591,11 @@ export default function ProductForm({ initialData }: { initialData?: any }) {
                               : "border-transparent opacity-60 hover:opacity-100"
                           }`}
                         >
-                          <img
+                          <Image
                             src={cdnUrl(thumb)}
                             alt={`Thumb ${ti + 1}`}
+                            width={40}
+                            height={40}
                             className="w-full h-full object-cover"
                           />
                         </button>

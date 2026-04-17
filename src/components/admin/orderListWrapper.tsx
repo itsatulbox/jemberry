@@ -3,11 +3,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import { Order } from "@/types/Order";
 
 export default function OrderListWrapper({
   initialOrders,
 }: {
-  initialOrders: any[];
+  initialOrders: Order[];
 }) {
   const [orders, setOrders] = useState(initialOrders);
   const [searchTerm, setSearchTerm] = useState("");

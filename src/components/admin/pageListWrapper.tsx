@@ -3,11 +3,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import { Page } from "@/types/Page";
 
 export default function PageListWrapper({
   initialPages,
 }: {
-  initialPages: any[];
+  initialPages: Page[];
 }) {
   const [pages, setPages] = useState(initialPages);
   const router = useRouter();

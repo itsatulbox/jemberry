@@ -5,6 +5,7 @@ import React, {
   useState,
   useEffect,
   useRef,
+  useCallback,
 } from "react";
 import { Product, CartItem } from "@/types/Product";
 
@@ -39,9 +40,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const isInitialized = useRef(false);
 
   useEffect(() => {
+    // Hydrate cart from localStorage after mount (SSR cannot read it).
     const saved = localStorage.getItem("jemberry-cart");
     if (saved) {
       try {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCart(JSON.parse(saved));
       } catch (e) {
         console.error("Failed to parse cart", e);
@@ -124,10 +127,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCart([]);
     localStorage.removeItem("jemberry-cart");
-  };
+  }, []);
 
   const cartTotal = cart.reduce(
     (total, item) =>

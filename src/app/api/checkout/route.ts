@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 import { getShippingRate } from "@/utils/shippingRates.server";
+import { OrderItem, DeliveryMethod } from "@/types/Order";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-12-15.clover" as any,
+  apiVersion: "2025-12-15.clover",
 });
 
 const supabase = createClient(
@@ -14,14 +15,27 @@ const supabase = createClient(
 
 export async function POST(req: Request) {
   try {
-    const { items, method, customerDetails, country } = await req.json();
+    const { items, method, customerDetails, country } = (await req.json()) as {
+      items: OrderItem[];
+      method: DeliveryMethod;
+      customerDetails: {
+        email: string;
+        firstName: string;
+        lastName: string;
+        phone: string;
+        address?: string;
+        city?: string;
+        country?: string;
+      };
+      country?: string;
+    };
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
     }
 
     // Look up current prices and stock from the database
-    const productIds = [...new Set(items.map((item: any) => item.id))];
+    const productIds = [...new Set(items.map((item) => item.id))];
     const { data: products, error: productsError } = await supabase
       .from("products")
       .select("id, name, price, stock, main_image")
@@ -195,10 +209,9 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: err.message || "Internal Server Error" },
-      { status: 500 },
-    );
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Internal Server Error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
