@@ -23,6 +23,7 @@ export default function ShippingManager({
   const [countries, setCountries] = useState(initialCountries);
   const [editingZone, setEditingZone] = useState<string | null>(null);
   const [newCountry, setNewCountry] = useState({ name: "", zone_id: "" });
+  const [newZone, setNewZone] = useState({ name: "", rate: "", label: "" });
   const router = useRouter();
   const supabase = createClient();
 
@@ -35,6 +36,59 @@ export default function ShippingManager({
       alert(error.message);
     } else {
       setEditingZone(null);
+      router.refresh();
+    }
+  };
+
+  const handleAddZone = async () => {
+    const name = newZone.name.trim();
+    const label = newZone.label.trim();
+    const rate = parseFloat(newZone.rate);
+    if (!name || !label || Number.isNaN(rate) || rate < 0) return;
+    if (zones.some((z) => z.name === name)) {
+      alert(`A zone named "${name}" already exists.`);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("shipping_zones")
+      .insert([{ name, rate, label }])
+      .select()
+      .single();
+
+    if (error) {
+      alert(error.message);
+    } else if (data) {
+      setZones([...zones, data]);
+      setNewZone({ name: "", rate: "", label: "" });
+      router.refresh();
+    }
+  };
+
+  const handleDeleteZone = async (zone: Zone) => {
+    if (zone.name === "rest_of_world") {
+      alert(
+        "Can't delete the rest_of_world zone — it's the fallback for unmatched countries.",
+      );
+      return;
+    }
+    const assigned = countries.filter((c) => c.zone_id === zone.id).length;
+    if (assigned > 0) {
+      alert(
+        `Can't delete "${zone.name}" — ${assigned} ${assigned === 1 ? "country is" : "countries are"} still assigned to it. Reassign them first.`,
+      );
+      return;
+    }
+    if (!confirm(`Delete zone "${zone.name}"?`)) return;
+
+    const { error } = await supabase
+      .from("shipping_zones")
+      .delete()
+      .eq("id", zone.id);
+    if (error) {
+      alert(error.message);
+    } else {
+      setZones(zones.filter((z) => z.id !== zone.id));
       router.refresh();
     }
   };
@@ -190,7 +244,16 @@ export default function ShippingManager({
                         </button>
                         <button
                           onClick={() => {
-                            setZones(initialZones);
+                            const original = initialZones.find(
+                              (z) => z.id === zone.id,
+                            );
+                            if (original) {
+                              setZones(
+                                zones.map((z) =>
+                                  z.id === zone.id ? original : z,
+                                ),
+                              );
+                            }
                             setEditingZone(null);
                           }}
                           className="px-3 py-1 text-xs font-bold opacity-60 hover:opacity-100"
@@ -199,18 +262,58 @@ export default function ShippingManager({
                         </button>
                       </div>
                     ) : (
-                      <button
-                        onClick={() => setEditingZone(zone.id)}
-                        className="px-3 py-1 border border-primary/20 rounded text-xs font-bold hover:bg-primary/5"
-                      >
-                        edit
-                      </button>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => setEditingZone(zone.id)}
+                          className="px-3 py-1 border border-primary/20 rounded text-xs font-bold hover:bg-primary/5"
+                        >
+                          edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteZone(zone)}
+                          className="px-3 py-1 text-red-400 hover:text-red-600 text-xs font-bold"
+                        >
+                          delete
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className="flex flex-wrap gap-2 mt-4">
+          <input
+            type="text"
+            placeholder="Zone name (e.g. asia)"
+            className="flex-1 min-w-[160px] border border-primary/20 p-2 rounded-md outline-none text-sm"
+            value={newZone.name}
+            onChange={(e) => setNewZone({ ...newZone, name: e.target.value })}
+          />
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            placeholder="Rate"
+            className="w-24 border border-primary/20 p-2 rounded-md outline-none text-sm"
+            value={newZone.rate}
+            onChange={(e) => setNewZone({ ...newZone, rate: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="Label (e.g. International Tracked (3-7 days))"
+            className="flex-1 min-w-[200px] border border-primary/20 p-2 rounded-md outline-none text-sm"
+            value={newZone.label}
+            onChange={(e) => setNewZone({ ...newZone, label: e.target.value })}
+          />
+          <button
+            onClick={handleAddZone}
+            className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-md hover:brightness-95"
+          >
+            + add zone
+          </button>
         </div>
       </section>
 
