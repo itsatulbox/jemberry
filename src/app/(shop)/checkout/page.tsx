@@ -3,7 +3,7 @@ import { useCart } from "@/context/cartContext";
 import { useToast } from "@/context/toastContext";
 import { useState, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
-import { cdnUrl } from "@/utils/cdnUrl";
+import { imgUrl } from "@/utils/cdnUrl";
 import {
   getShippingRateFromData,
   getShippingLabelFromData,
@@ -313,7 +313,7 @@ export default function CheckoutPage() {
                 >
                   <div className="relative w-12 h-12 rounded overflow-hidden border border-primary/10 bg-white">
                     <Image
-                      src={cdnUrl(item.main_image || "/placeholder.jpg")}
+                      src={imgUrl(item.main_image, "thumb")}
                       alt={item.name}
                       fill
                       className="object-cover"

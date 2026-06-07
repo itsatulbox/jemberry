@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { cdnUrl } from "@/utils/cdnUrl";
+import { imgUrl } from "@/utils/cdnUrl";
 
 export default function ImageCarousel({
   mainImage,
@@ -13,11 +13,10 @@ export default function ImageCarousel({
   images: string[];
   alt: string;
 }) {
-  const main = cdnUrl(mainImage || "/placeholder.jpg");
-  const rest = (images || [])
-    .filter((img) => img && img !== mainImage)
-    .map(cdnUrl);
-  const allImages = [main, ...rest];
+  // Keep the raw stored URLs; resolve to the right size at render time so the
+  // main view loads `full` while the thumbnail strip only loads `thumb`.
+  const rest = (images || []).filter((img) => img && img !== mainImage);
+  const allImages = [mainImage || "/placeholder.jpg", ...rest];
 
   const [current, setCurrent] = useState(0);
 
@@ -53,7 +52,7 @@ export default function ImageCarousel({
 
         <div className="relative aspect-square bg-gray-50 overflow-hidden rounded-lg w-full">
           <Image
-            src={allImages[current]}
+            src={imgUrl(allImages[current], "full")}
             alt={alt}
             className="object-cover"
             fill
@@ -98,7 +97,7 @@ export default function ImageCarousel({
               }`}
             >
               <Image
-                src={src}
+                src={imgUrl(src, "thumb")}
                 alt={`${alt} ${i + 1}`}
                 className="object-cover"
                 fill

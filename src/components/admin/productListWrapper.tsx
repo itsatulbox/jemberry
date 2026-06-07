@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import { cdnUrl } from "@/utils/cdnUrl";
+import { imgUrl } from "@/utils/cdnUrl";
 import { Product } from "@/types/Product";
 
 export default function ProductListWrapper({
@@ -58,7 +58,7 @@ export default function ProductListWrapper({
           >
             <div className="aspect-square relative bg-gray-50">
               <Image
-                src={cdnUrl(product.main_image || "/placeholder.jpg")}
+                src={imgUrl(product.main_image, "md")}
                 alt={product.name}
                 fill
                 className="object-cover"

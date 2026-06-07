@@ -2,7 +2,7 @@
 import { useCart } from "@/context/cartContext";
 import Link from "next/link";
 import Image from "next/image";
-import { cdnUrl } from "@/utils/cdnUrl";
+import { imgUrl } from "@/utils/cdnUrl";
 
 export default function Cart() {
   const { cart, removeFromCart, updateQuantity, cartTotal } = useCart();
@@ -35,7 +35,7 @@ export default function Cart() {
           >
             <div className="relative w-24 h-24 bg-gray-50 overflow-hidden rounded-md flex-shrink-0 border border-primary/10">
               <Image
-                src={cdnUrl(item.main_image || "/placeholder.jpg")}
+                src={imgUrl(item.main_image, "thumb")}
                 alt={item.name}
                 fill
                 className="object-cover"

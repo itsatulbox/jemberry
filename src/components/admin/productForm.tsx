@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 import RichTextEditor from "@/components/admin/richTextEditor";
-import { compressImage } from "@/utils/compressImage";
-import { cdnUrl } from "@/utils/cdnUrl";
+import { compressVariants } from "@/utils/compressImage";
+import { imgUrl } from "@/utils/cdnUrl";
 import { Product } from "@/types/Product";
 
 type VariantDraft = { name: string; price: number; stock: number };
@@ -101,21 +101,28 @@ export default function ProductForm({
 
     if (files.length > 0) {
       for (const file of files) {
-        const compressed = await compressImage(file);
-        const fileName = `${Date.now()}-${compressed.name}`;
-        const { data: uploadData } = await supabase.storage
-          .from("products")
-          .upload(fileName, compressed, {
-            cacheControl: "31536000",
-          });
+        const variants = await compressVariants(file);
+        const fd = new FormData();
+        fd.append("thumb", variants.thumb);
+        fd.append("md", variants.md);
+        fd.append("full", variants.full);
 
-        if (uploadData) {
-          const {
-            data: { publicUrl },
-          } = supabase.storage.from("products").getPublicUrl(fileName);
-          uploadedImageUrls.push(publicUrl);
-          if (!mainImageUrl) mainImageUrl = publicUrl;
+        const res = await fetch("/api/admin/upload", {
+          method: "POST",
+          body: fd,
+        });
+        if (!res.ok) {
+          const { error: upErr } = await res
+            .json()
+            .catch(() => ({ error: "Image upload failed" }));
+          setError(upErr || "Image upload failed");
+          setLoading(false);
+          return;
         }
+
+        const { url } = await res.json();
+        uploadedImageUrls.push(url);
+        if (!mainImageUrl) mainImageUrl = url;
       }
     }
 
@@ -479,7 +486,7 @@ export default function ProductForm({
                   {/* Main preview */}
                   <div className="relative group w-48 h-48 mx-auto rounded-lg overflow-hidden border-2 border-primary/20 bg-gray-50">
                     <Image
-                      src={cdnUrl(url)}
+                      src={imgUrl(url, "thumb")}
                       alt={`Product image ${idx + 1}`}
                       width={192}
                       height={192}
@@ -592,7 +599,7 @@ export default function ProductForm({
                           }`}
                         >
                           <Image
-                            src={cdnUrl(thumb)}
+                            src={imgUrl(thumb, "thumb")}
                             alt={`Thumb ${ti + 1}`}
                             width={40}
                             height={40}
