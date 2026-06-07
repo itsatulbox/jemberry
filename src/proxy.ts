@@ -2,6 +2,23 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Maintenance gate. Runs before any Supabase call so it works even while the
+  // backend is down. Flip MAINTENANCE_MODE=true (env) to send all visitor
+  // traffic to the static maintenance page with a 503 (keeps SEO intact).
+  if (process.env.MAINTENANCE_MODE === "true") {
+    if (pathname !== "/maintenance" && !pathname.startsWith("/_next")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/maintenance";
+      return NextResponse.rewrite(url, {
+        status: 503,
+        headers: { "Retry-After": "3600" },
+      });
+    }
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
