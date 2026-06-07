@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
-import { cdnUrl } from "@/utils/cdnUrl";
+import { imgUrl } from "@/utils/cdnUrl";
 import { Order, OrderStatus } from "@/types/Order";
 
 export default function OrderForm({ initialData }: { initialData: Order }) {
@@ -61,7 +61,7 @@ export default function OrderForm({ initialData }: { initialData: Order }) {
                   className="bg-primary/5 rounded-lg overflow-hidden border border-primary/5"
                 >
                   <Image
-                    src={cdnUrl(item.main_image || "/placeholder.jpg")}
+                    src={imgUrl(item.main_image, "thumb")}
                     alt={item.name}
                     width={60}
                     height={60}
