@@ -3,7 +3,7 @@ import { useCart } from "@/context/cartContext";
 import { useToast } from "@/context/toastContext";
 import { useState, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
-import { imgUrl } from "@/utils/cdnUrl";
+import { imgUrl } from "@/utils/imageUrl";
 import {
   getShippingRateFromData,
   getShippingLabelFromData,

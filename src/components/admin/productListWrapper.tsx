@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import { imgUrl } from "@/utils/cdnUrl";
+import { imgUrl } from "@/utils/imageUrl";
 import { Product } from "@/types/Product";
 
 export default function ProductListWrapper({
