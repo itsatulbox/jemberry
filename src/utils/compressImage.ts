@@ -1,5 +1,5 @@
 import imageCompression from "browser-image-compression";
-import type { ImageSize } from "@/utils/cdnUrl";
+import type { ImageSize } from "@/utils/imageUrl";
 
 // Longest-edge cap (px) and quality per variant.
 //   thumb/md  -> small display contexts (cart, grid); kept light for fast pages.

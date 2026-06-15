@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Product } from "@/types/Product";
-import { imgUrl } from "@/utils/cdnUrl";
+import { imgUrl } from "@/utils/imageUrl";
 
 export default function ShopItem({ item }: { item: Product }) {
   const hasVariants = item.variants && item.variants.length > 0;

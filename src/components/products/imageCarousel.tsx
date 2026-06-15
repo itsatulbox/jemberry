@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { imgUrl } from "@/utils/cdnUrl";
+import { imgUrl } from "@/utils/imageUrl";
 
 export default function ImageCarousel({
   mainImage,

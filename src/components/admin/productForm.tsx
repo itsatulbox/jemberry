@@ -5,7 +5,7 @@ import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 import RichTextEditor from "@/components/admin/richTextEditor";
 import { compressVariants } from "@/utils/compressImage";
-import { imgUrl } from "@/utils/cdnUrl";
+import { imgUrl } from "@/utils/imageUrl";
 import { Product } from "@/types/Product";
 
 type VariantDraft = { name: string; price: number; stock: number };
