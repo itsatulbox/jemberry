@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Product } from "@/types/Product";
 import { imgUrl } from "@/utils/imageUrl";
+import { formatPrice } from "@/utils/currency";
 
 export default function ShopItem({ item }: { item: Product }) {
   const hasVariants = item.variants && item.variants.length > 0;
@@ -39,10 +40,10 @@ export default function ShopItem({ item }: { item: Product }) {
                 const min = Math.min(...prices);
                 const max = Math.max(...prices);
                 return min === max
-                  ? `NZD ${min.toFixed(2)}`
-                  : `NZD ${min.toFixed(2)} — ${max.toFixed(2)}`;
+                  ? formatPrice(min)
+                  : `from ${formatPrice(min)}`;
               })()
-            : `NZD ${item.price.toFixed(2)}`}
+            : formatPrice(item.price)}
         </p>
       </div>
     </Link>

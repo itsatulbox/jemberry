@@ -5,6 +5,7 @@ import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 import { imgUrl } from "@/utils/imageUrl";
 import { Order, OrderStatus } from "@/types/Order";
+import { formatMoney } from "@/utils/currency";
 
 export default function OrderForm({ initialData }: { initialData: Order }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -211,7 +212,7 @@ export default function OrderForm({ initialData }: { initialData: Order }) {
                       Shipping Cost
                     </p>
                     <p className="text-[11px] font-black text-primary">
-                      ${Number(initialData.shipping_cost).toFixed(2)} NZD
+                      {formatMoney(Number(initialData.shipping_cost))}
                     </p>
                   </div>
                 )}

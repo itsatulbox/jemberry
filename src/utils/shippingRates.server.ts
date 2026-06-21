@@ -1,5 +1,9 @@
 // Server-only shipping rate utilities
 import { createClient } from "@/utils/supabase/server";
+import {
+  getShippingRateFromData,
+  isServiceableCountry,
+} from "@/utils/shippingRates";
 
 export async function getShippingDataFromDB() {
   const supabase = await createClient();
@@ -16,20 +20,17 @@ export async function getShippingDataFromDB() {
   return { zones: zones || [], countries: countries || [] };
 }
 
-export async function getShippingRate(
+// Resolves shipping for an order in one DB round-trip: whether we ship to the
+// destination at all, and the cost (0 for pickup / free-shipping threshold).
+export async function resolveShipping(
   country: string,
   method: "shipping" | "pickup",
-): Promise<number> {
-  if (method === "pickup") return 0;
-  if (!country || country.trim() === "") return 0;
-
+  subtotal = 0,
+): Promise<{ serviceable: boolean; cost: number }> {
+  if (method === "pickup") return { serviceable: true, cost: 0 };
   const { zones, countries } = await getShippingDataFromDB();
-  const match = countries.find(
-    (c) => c.name.toLowerCase() === country.trim().toLowerCase(),
-  );
-  const zone = match
-    ? zones.find((z) => z.id === match.zone_id)
-    : zones.find((z) => z.name === "rest_of_world");
-
-  return zone ? Number(zone.rate) : 0;
+  return {
+    serviceable: isServiceableCountry(country, zones, countries),
+    cost: getShippingRateFromData(country, method, zones, countries, subtotal),
+  };
 }
