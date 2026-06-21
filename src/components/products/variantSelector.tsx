@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Product } from "@/types/Product";
 import AddToCartButton from "@/components/shop/addToCartButton";
+import { formatPrice } from "@/utils/currency";
 
 export default function VariantSelector({ product }: { product: Product }) {
   const [selectedVariantName, setSelectedVariantName] = useState<string | null>(
@@ -24,17 +25,17 @@ export default function VariantSelector({ product }: { product: Product }) {
   const displayPrice = () => {
     if (!hasVariants) {
       const base = Number(product.price) + addonModifier;
-      return `NZD ${base.toFixed(2)}`;
+      return formatPrice(base);
     }
     if (selectedVariant) {
       const total = selectedVariant.price + addonModifier;
-      return `NZD ${total.toFixed(2)}`;
+      return formatPrice(total);
     }
     const prices = product.variants.map((v) => v.price + addonModifier);
     const min = Math.min(...prices);
     const max = Math.max(...prices);
-    if (min === max) return `NZD ${min.toFixed(2)}`;
-    return `NZD ${min.toFixed(2)} — ${max.toFixed(2)}`;
+    if (min === max) return formatPrice(min);
+    return `from ${formatPrice(min)}`;
   };
 
   return (
@@ -52,7 +53,7 @@ export default function VariantSelector({ product }: { product: Product }) {
             <option value="">Select a variant</option>
             {product.variants.map((v) => (
               <option key={v.name} value={v.name} disabled={v.stock <= 0}>
-                {v.name} — NZD {v.price.toFixed(2)}
+                {v.name} | {formatPrice(v.price)}
                 {v.stock <= 0 ? " (Sold Out)" : ""}
               </option>
             ))}

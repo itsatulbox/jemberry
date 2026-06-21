@@ -7,9 +7,11 @@ import { imgUrl } from "@/utils/imageUrl";
 import {
   getShippingRateFromData,
   getShippingLabelFromData,
+  qualifiesForFreeShipping,
   type ShippingZone,
   type ShippingCountry,
 } from "@/utils/shippingRates";
+import { formatPrice, formatMoney } from "@/utils/currency";
 
 export default function CheckoutPage() {
   const { cart, cartTotal } = useCart();
@@ -33,7 +35,7 @@ export default function CheckoutPage() {
       .catch((err) => {
         console.error("Failed to load shipping options:", err);
         showToast(
-          "Couldn't load shipping options — please refresh.",
+          "Couldn't load shipping options. Please refresh.",
           "error",
         );
       });
@@ -51,13 +53,33 @@ export default function CheckoutPage() {
   });
 
   const shippingCost = useMemo(
-    () => getShippingRateFromData(formData.country, method, zones, countries),
-    [formData.country, method, zones, countries],
+    () =>
+      getShippingRateFromData(
+        formData.country,
+        method,
+        zones,
+        countries,
+        cartTotal,
+      ),
+    [formData.country, method, zones, countries, cartTotal],
   );
   const shippingLabel = useMemo(
-    () => getShippingLabelFromData(formData.country, method, zones, countries),
-    [formData.country, method, zones, countries],
+    () =>
+      getShippingLabelFromData(
+        formData.country,
+        method,
+        zones,
+        countries,
+        cartTotal,
+      ),
+    [formData.country, method, zones, countries, cartTotal],
   );
+  // Free when picking up, when the order clears the threshold, or when the
+  // selected destination has a $0 zone rate (e.g. NZ / Australia).
+  const freeShipping =
+    method === "pickup" ||
+    qualifiesForFreeShipping(cartTotal) ||
+    (method === "shipping" && !!formData.country && shippingCost === 0);
   const orderTotal = cartTotal + shippingCost;
 
   const [countrySearch, setCountrySearch] = useState("");
@@ -229,18 +251,10 @@ export default function CheckoutPage() {
                     {countryDropdownOpen && (
                       <ul className="absolute z-50 left-0 right-0 mt-1 max-h-52 overflow-y-auto border border-primary/20 rounded-md bg-white shadow-lg">
                         {filteredCountries.length === 0 ? (
-                          <li
-                            onClick={() => {
-                              setFormData({
-                                ...formData,
-                                country: "Other Country",
-                              });
-                              setCountrySearch("");
-                              setCountryDropdownOpen(false);
-                            }}
-                            className="p-3 text-sm cursor-pointer hover:bg-primary/5 transition-colors"
-                          >
-                            Other Country
+                          <li className="p-3 text-sm opacity-70 leading-relaxed">
+                            Don&apos;t see your country? Message us on Instagram
+                            and we&apos;ll add it if tracked shipping is
+                            available.
                           </li>
                         ) : (
                           filteredCountries.map((c) => (
@@ -298,7 +312,7 @@ export default function CheckoutPage() {
             disabled={loading || (method === "shipping" && !formData.country)}
             className="w-full py-4 bg-primary text-white rounded-md font-bold text-lg hover:brightness-95 disabled:bg-gray-300"
           >
-            {loading ? "Processing..." : `Pay $${orderTotal.toFixed(2)} NZD`}
+            {loading ? "Processing..." : `Pay ${formatMoney(orderTotal)}`}
           </button>
         </form>
 
@@ -335,10 +349,11 @@ export default function CheckoutPage() {
                     )}
                   </div>
                   <span>
-                    $
-                    {(
-                      ((item.variantPrice ?? item.price) + (item.addonPrice ?? 0)) * item.quantity
-                    ).toFixed(2)}
+                    {formatPrice(
+                      ((item.variantPrice ?? item.price) +
+                        (item.addonPrice ?? 0)) *
+                        item.quantity,
+                    )}
                   </span>
                 </div>
               ))}
@@ -346,31 +361,31 @@ export default function CheckoutPage() {
             <div className="border-t border-primary/20 pt-4 space-y-3">
               <div className="flex justify-between text-sm">
                 <span>Subtotal</span>
-                <span>${cartTotal.toFixed(2)}</span>
+                <span>{formatPrice(cartTotal)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Shipping</span>
                 <span
                   className={
-                    shippingCost === 0 &&
-                    method === "shipping" &&
-                    !formData.country
+                    !freeShipping && method === "shipping" && !formData.country
                       ? "opacity-50 italic"
-                      : ""
+                      : freeShipping
+                        ? "font-bold text-primary"
+                        : ""
                   }
                 >
-                  {method === "pickup"
-                    ? "Free"
+                  {freeShipping
+                    ? "FREE"
                     : !formData.country
                       ? "Select country"
-                      : `$${shippingCost.toFixed(2)}`}
+                      : formatPrice(shippingCost)}
                 </span>
               </div>
               <div className="flex justify-between text-xl font-bold pt-2 border-t border-primary/10">
                 <span>Total</span>
-                <span>${orderTotal.toFixed(2)} NZD</span>
+                <span>{formatMoney(orderTotal)}</span>
               </div>
-              {method === "shipping" && formData.country && (
+              {(freeShipping || (method === "shipping" && formData.country)) && (
                 <p className="text-xs opacity-50 italic">{shippingLabel}</p>
               )}
             </div>

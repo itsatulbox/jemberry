@@ -238,7 +238,7 @@ export default function ProductForm({
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-bold mb-1">price (NZD)</label>
+            <label className="block text-sm font-bold mb-1">price (USD)</label>
             <input
               type="number"
               step="0.01"

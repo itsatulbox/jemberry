@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
-import { getShippingRate } from "@/utils/shippingRates.server";
+import { resolveShipping } from "@/utils/shippingRates.server";
+import { STRIPE_CURRENCY } from "@/utils/currency";
 import { OrderItem, DeliveryMethod } from "@/types/Order";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -107,10 +108,16 @@ export async function POST(req: Request) {
 
       if (item.selectedAddon) {
         const addon = addonMap.get(`${item.id}|${item.selectedAddon}`);
-        if (addon) {
-          unitPrice += Number(addon.price_modifier);
-          nameParts.push(item.selectedAddon);
+        if (!addon) {
+          return NextResponse.json(
+            {
+              error: `Add-on "${item.selectedAddon}" for "${product.name}" is no longer available`,
+            },
+            { status: 400 },
+          );
         }
+        unitPrice += Number(addon.price_modifier);
+        nameParts.push(item.selectedAddon);
       }
 
       if (item.quantity > stock) {
@@ -134,11 +141,32 @@ export async function POST(req: Request) {
       });
     }
 
-    // Compute shipping server-side (never trust client-sent shipping cost)
-    const serverShippingCost = await getShippingRate(
-      country || customerDetails.country || "",
+    // A shipping order must have a destination we actually ship to, otherwise
+    // the rate lookup falls through to 0 and the order would ship free. The
+    // client UI enforces this, but a direct API call could bypass it.
+    const shippingCountry = (country || customerDetails.country || "").trim();
+    if (method === "shipping" && !shippingCountry) {
+      return NextResponse.json(
+        { error: "Please select a shipping country." },
+        { status: 400 },
+      );
+    }
+
+    // Compute shipping server-side (never trust client-sent shipping cost).
+    // serverTotal is the item subtotal, which drives the free-shipping threshold.
+    const { serviceable, cost: serverShippingCost } = await resolveShipping(
+      shippingCountry,
       method,
+      serverTotal,
     );
+    if (method === "shipping" && !serviceable) {
+      return NextResponse.json(
+        {
+          error: `We don't have tracked shipping to "${shippingCountry}" yet. Message us on Instagram and we'll add it if it's available.`,
+        },
+        { status: 400 },
+      );
+    }
     const grandTotal = serverTotal + serverShippingCost;
 
     const { data: order, error: orderError } = await supabase
@@ -151,9 +179,7 @@ export async function POST(req: Request) {
           address: customerDetails.address || "Pickup",
           city: customerDetails.city || "Auckland",
           country:
-            country ||
-            customerDetails.country ||
-            (method === "pickup" ? "New Zealand" : null),
+            shippingCountry || (method === "pickup" ? "New Zealand" : null),
           delivery_method: method,
           total_amount: grandTotal,
           shipping_cost: serverShippingCost,
@@ -170,7 +196,7 @@ export async function POST(req: Request) {
 
     const line_items = validatedItems.map((item) => ({
       price_data: {
-        currency: "nzd",
+        currency: STRIPE_CURRENCY,
         product_data: {
           name: item.name,
           images: item.image ? [item.image] : [],
@@ -184,9 +210,9 @@ export async function POST(req: Request) {
     if (serverShippingCost > 0) {
       line_items.push({
         price_data: {
-          currency: "nzd",
+          currency: STRIPE_CURRENCY,
           product_data: {
-            name: "Shipping — NZ Post Tracked",
+            name: "Shipping",
             images: [],
           },
           unit_amount: Math.round(serverShippingCost * 100),

@@ -1,4 +1,5 @@
 import Navbar from "@/components/common/navbar";
+import AnnouncementBanner from "@/components/common/announcementBanner";
 import Footer from "@/components/common/footer";
 import { CartProvider } from "@/context/cartContext";
 import { ToastProvider } from "@/context/toastContext";
@@ -32,6 +33,7 @@ export default async function ShopLayout({
     <div className="flex flex-col min-h-screen">
       <CartProvider>
         <ToastProvider>
+          <AnnouncementBanner />
           <Navbar navLinks={navLinks} />
           <main className="grow">{children}</main>
           <Footer pages={pages} />

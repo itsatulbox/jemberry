@@ -3,6 +3,8 @@ import { useCart } from "@/context/cartContext";
 import Link from "next/link";
 import Image from "next/image";
 import { imgUrl } from "@/utils/imageUrl";
+import { formatPrice, formatMoney } from "@/utils/currency";
+import { FREE_SHIPPING_THRESHOLD } from "@/utils/shippingRates";
 
 export default function Cart() {
   const { cart, removeFromCart, updateQuantity, cartTotal } = useCart();
@@ -59,13 +61,18 @@ export default function Cart() {
                     </p>
                   )}
                   <p className="text-xs italic mt-1">
-                    ${((item.variantPrice ?? item.price) + (item.addonPrice ?? 0)).toFixed(2)} NZD each
+                    {formatMoney(
+                      (item.variantPrice ?? item.price) +
+                        (item.addonPrice ?? 0),
+                    )}{" "}
+                    each
                   </p>
                 </div>
                 <p className="font-bold text-primary">
-                  $
-                  {(((item.variantPrice ?? item.price) + (item.addonPrice ?? 0)) * item.quantity).toFixed(
-                    2
+                  {formatPrice(
+                    ((item.variantPrice ?? item.price) +
+                      (item.addonPrice ?? 0)) *
+                      item.quantity,
                   )}
                 </p>
               </div>
@@ -107,8 +114,18 @@ export default function Cart() {
         <div className="pt-4 space-y-6">
           <div className="flex justify-between text-xl font-bold pt-4 text-primary">
             <span>Total</span>
-            <span>${cartTotal.toFixed(2)} NZD</span>
+            <span>{formatMoney(cartTotal)}</span>
           </div>
+          {cartTotal >= FREE_SHIPPING_THRESHOLD ? (
+            <p className="text-sm text-center font-bold text-primary">
+              You&apos;ve unlocked free shipping!
+            </p>
+          ) : (
+            <p className="text-sm text-center text-primary/70">
+              {formatPrice(FREE_SHIPPING_THRESHOLD - cartTotal)} away from free
+              shipping
+            </p>
+          )}
           <div className="space-y-3">
             <Link
               href="/checkout"
@@ -117,7 +134,7 @@ export default function Cart() {
               Proceed to Checkout
             </Link>
             <p className="text-xs text-center italic opacity-60">
-              Shipping and taxes calculated at checkout
+              Shipping calculated at checkout
             </p>
           </div>
         </div>
