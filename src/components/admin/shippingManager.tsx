@@ -66,12 +66,6 @@ export default function ShippingManager({
   };
 
   const handleDeleteZone = async (zone: Zone) => {
-    if (zone.name === "rest_of_world") {
-      alert(
-        "Can't delete the rest_of_world zone — it's the fallback for unmatched countries.",
-      );
-      return;
-    }
     const assigned = countries.filter((c) => c.zone_id === zone.id).length;
     if (assigned > 0) {
       alert(
@@ -180,7 +174,7 @@ export default function ShippingManager({
             <thead>
               <tr className="border-b border-primary/10 bg-primary/5">
                 <th className="text-left p-3 font-bold">Zone</th>
-                <th className="text-left p-3 font-bold">Rate (NZD)</th>
+                <th className="text-left p-3 font-bold">Rate (USD)</th>
                 <th className="text-left p-3 font-bold">Label</th>
                 <th className="text-right p-3 font-bold">Actions</th>
               </tr>
