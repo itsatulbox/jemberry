@@ -1,13 +1,9 @@
 import { NextResponse } from "next/server";
-import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 import { resolveShipping } from "@/utils/shippingRates.server";
 import { STRIPE_CURRENCY } from "@/utils/currency";
 import { OrderItem, DeliveryMethod } from "@/types/Order";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-12-15.clover",
-});
+import { getStripe, isStripeConfigured } from "@/utils/stripe";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,6 +11,13 @@ const supabase = createClient(
 );
 
 export async function POST(req: Request) {
+  if (!isStripeConfigured()) {
+    return NextResponse.json(
+      { error: "This shop is a portfolio demo and no longer takes payments." },
+      { status: 503 },
+    );
+  }
+
   try {
     const { items, method, customerDetails, country } = (await req.json()) as {
       items: OrderItem[];
@@ -223,7 +226,7 @@ export async function POST(req: Request) {
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       payment_method_types: ["card"],
       line_items,
       mode: "payment",
